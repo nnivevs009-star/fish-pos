@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>สื่อการสอน SMC Trading</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0d1117; color: #e6edf3; line-height: 1.7; }
+
+  .hero {
+    background: linear-gradient(135deg, #1a1f2e 0%, #0d1117 50%, #1a1f2e 100%);
+    text-align: center; padding: 60px 20px;
+    border-bottom: 1px solid #30363d;
+  }
+  .hero h1 { font-size: 2.8rem; color: #f0c040; letter-spacing: 2px; }
+  .hero p { font-size: 1.1rem; color: #8b949e; margin-top: 10px; }
+  .badge { display: inline-block; background: #21262d; border: 1px solid #30363d; border-radius: 20px; padding: 4px 16px; font-size: 0.85rem; color: #58a6ff; margin-top: 15px; }
+
+  .nav {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+    padding: 20px; background: #161b22; border-bottom: 1px solid #30363d; position: sticky; top: 0; z-index: 100;
+  }
+  .nav a { color: #58a6ff; text-decoration: none; padding: 6px 16px; border-radius: 20px; border: 1px solid #30363d; font-size: 0.9rem; transition: all 0.2s; }
+  .nav a:hover { background: #21262d; border-color: #58a6ff; }
+
+  .container { max-width: 960px; margin: 0 auto; padding: 40px 20px; }
+
+  .section { margin-bottom: 60px; }
+  .section-title {
+    font-size: 1.8rem; font-weight: 700; margin-bottom: 25px;
+    padding-bottom: 12px; border-bottom: 2px solid #21262d;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .section-title .icon { font-size: 1.5rem; }
+  .section-title .num { color: #f0c040; font-size: 1.1rem; font-weight: 400; }
+
+  .card {
+    background: #161b22; border: 1px solid #30363d; border-radius: 12px;
+    padding: 24px; margin-bottom: 16px;
+  }
+  .card h3 { color: #f0c040; font-size: 1.1rem; margin-bottom: 10px; }
+  .card p { color: #8b949e; }
+  .card .highlight { color: #e6edf3; font-weight: 500; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+
+  .concept-box {
+    background: #161b22; border: 1px solid #30363d; border-radius: 12px;
+    padding: 20px; border-left: 4px solid;
+  }
+  .concept-box.bullish { border-left-color: #3fb950; }
+  .concept-box.bearish { border-left-color: #f85149; }
+  .concept-box.neutral { border-left-color: #f0c040; }
+  .concept-box.blue { border-left-color: #58a6ff; }
+  .concept-box h3 { font-size: 1rem; margin-bottom: 8px; }
+  .concept-box.bullish h3 { color: #3fb950; }
+  .concept-box.bearish h3 { color: #f85149; }
+  .concept-box.neutral h3 { color: #f0c040; }
+  .concept-box.blue h3 { color: #58a6ff; }
+  .concept-box p { color: #8b949e; font-size: 0.92rem; }
+
+  .chart-mock {
+    background: #0d1117; border: 1px solid #30363d; border-radius: 8px;
+    padding: 20px; margin: 16px 0; font-family: monospace; font-size: 0.85rem; color: #58a6ff;
+    overflow-x: auto; white-space: pre;
+  }
+
+  .step-list { counter-reset: steps; }
+  .step {
+    display: flex; gap: 16px; margin-bottom: 20px;
+    background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px;
+  }
+  .step-num {
+    background: #f0c040; color: #0d1117; font-weight: 700; font-size: 1.1rem;
+    width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .step-content h3 { color: #e6edf3; margin-bottom: 6px; }
+  .step-content p { color: #8b949e; font-size: 0.92rem; }
+
+  .tag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; margin: 3px; }
+  .tag.green { background: #1a3a20; color: #3fb950; border: 1px solid #2ea043; }
+  .tag.red { background: #3a1a1a; color: #f85149; border: 1px solid #da3633; }
+  .tag.yellow { background: #3a3020; color: #f0c040; border: 1px solid #d4a017; }
+  .tag.blue { background: #1a2a3a; color: #58a6ff; border: 1px solid #388bfd; }
+
+  .rule-box {
+    background: #1c2128; border: 1px solid #f0c040; border-radius: 10px; padding: 16px 20px; margin: 12px 0;
+  }
+  .rule-box strong { color: #f0c040; }
+
+  .warning-box {
+    background: #2d1b00; border: 1px solid #d29922; border-radius: 10px; padding: 16px 20px; margin: 12px 0;
+  }
+  .warning-box strong { color: #d29922; }
+
+  .tip-box {
+    background: #0c2d3a; border: 1px solid #1f6feb; border-radius: 10px; padding: 16px 20px; margin: 12px 0;
+  }
+  .tip-box strong { color: #58a6ff; }
+
+  .checklist { list-style: none; padding: 0; }
+  .checklist li { padding: 8px 0; border-bottom: 1px solid #21262d; color: #8b949e; }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist li::before { content: "✓ "; color: #3fb950; font-weight: 700; }
+
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+  th { background: #21262d; color: #f0c040; padding: 12px; text-align: left; }
+  td { padding: 10px 12px; border-bottom: 1px solid #21262d; color: #8b949e; font-size: 0.92rem; }
+  tr:hover td { background: #161b22; }
+
+  .flow {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 16px 0;
+  }
+  .flow-item {
+    background: #21262d; border: 1px solid #30363d; border-radius: 8px;
+    padding: 8px 16px; font-size: 0.9rem; color: #e6edf3;
+  }
+  .flow-arrow { color: #f0c040; font-size: 1.2rem; }
+
+  footer {
+    text-align: center; padding: 40px 20px; border-top: 1px solid #30363d;
+    color: #8b949e; font-size: 0.85rem;
+  }
+
+  @media (max-width: 600px) {
+    .hero h1 { font-size: 1.8rem; }
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>📈 SMC Trading</h1>
+  <p>Smart Money Concepts — เทรดตาม "เงินใหญ่" ด้วยการอ่านโครงสร้างตลาด</p>
+  <span class="badge">สื่อการสอนฉบับเข้าใจง่าย</span>
+</div>
+
+<nav class="nav">
+  <a href="#what">SMC คืออะไร</a>
+  <a href="#structure">Market Structure</a>
+  <a href="#liquidity">Liquidity</a>
+  <a href="#orderblock">Order Block</a>
+  <a href="#fvg">FVG</a>
+  <a href="#poi">POI</a>
+  <a href="#entry">Entry Model</a>
+  <a href="#checklist">Checklist</a>
+</nav>
+
+<div class="container">
+
+  <!-- SECTION 1: SMC คืออะไร -->
+  <div class="section" id="what">
+    <div class="section-title"><span class="icon">🧠</span> SMC คืออะไร <span class="num">บทที่ 1</span></div>
+
+    <div class="card">
+      <h3>แนวคิดหลัก</h3>
+      <p>SMC (Smart Money Concepts) คือแนวทางการเทรดที่เชื่อว่า <span class="highlight">สถาบันการเงินขนาดใหญ่</span> (ธนาคาร กองทุน) คือผู้ขับเคลื่อนราคาจริงๆ เราต้องอ่านให้ออกว่า "เงินใหญ่" กำลังทำอะไรอยู่ และเข้าเทรดตามพวกเขา</p>
+    </div>
+
+    <div class="grid">
+      <div class="concept-box neutral">
+        <h3>Retail Trader (คนทั่วไป)</h3>
+        <p>ใช้ RSI, MACD, MA ดู Indicator เป็นหลัก มักเป็นฝั่งที่ขาดทุนให้ "เงินใหญ่"</p>
+      </div>
+      <div class="concept-box blue">
+        <h3>Smart Money (สถาบัน)</h3>
+        <p>สร้าง Liquidity จงใจ ล่า Stop Loss ของ Retail แล้วเข้าสะสมออเดอร์ขนาดใหญ่</p>
+      </div>
+    </div>
+
+    <div class="rule-box">
+      <strong>หลักการ:</strong> ราคาไม่ได้ขึ้นลงแบบสุ่ม — มันถูกขับเคลื่อนเพื่อ "ล่า Liquidity" แล้วจึงไปในทิศทางจริง
+    </div>
+
+    <div class="card">
+      <h3>3 สิ่งที่ SMC โฟกัส</h3>
+      <div style="margin-top:12px;">
+        <span class="tag yellow">1. Market Structure — ทิศทางตลาด</span>
+        <span class="tag blue">2. Liquidity — บริเวณที่มีออเดอร์สะสม</span>
+        <span class="tag green">3. POI — จุดที่สถาบันเข้าออเดอร์</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: Market Structure -->
+  <div class="section" id="structure">
+    <div class="section-title"><span class="icon">🏗️</span> Market Structure <span class="num">บทที่ 2</span></div>
+
+    <div class="card">
+      <p>Market Structure คือการอ่านว่าตลาดกำลังวิ่งทิศทางไหน โดยดูจาก <span class="highlight">Swing High และ Swing Low</span></p>
+    </div>
+
+    <div class="grid">
+      <div class="concept-box bullish">
+        <h3>Bullish Structure (ขาขึ้น)</h3>
+        <p>HH (Higher High) + HL (Higher Low)<br>ราคาทำจุดสูงสุดใหม่และจุดต่ำสุดใหม่ที่สูงขึ้นเรื่อยๆ</p>
+      </div>
+      <div class="concept-box bearish">
+        <h3>Bearish Structure (ขาลง)</h3>
+        <p>LH (Lower High) + LL (Lower Low)<br>ราคาทำจุดต่ำสุดใหม่และจุดสูงสุดใหม่ที่ต่ำลงเรื่อยๆ</p>
+      </div>
+    </div>
+
+    <div class="chart-mock">  ขาขึ้น (Bullish)            ขาลง (Bearish)
+                HH              LH
+           HH  /           LH /
+      HL  /   /        LL /  /
+     /   HL  /      LL /  LL
+    /       /      /
+ราคา → เวลา      ราคา → เวลา</div>
+
+    <div class="grid">
+      <div class="concept-box neutral">
+        <h3>BOS — Break of Structure</h3>
+        <p><strong style="color:#f0c040">การยืนยันทิศทาง</strong><br>ราคาทะลุผ่าน Swing High/Low เก่า = ยืนยันว่า Trend ยังดำเนินต่อ</p>
+      </div>
+      <div class="concept-box blue">
+        <h3>CHoCH — Change of Character</h3>
+        <p><strong style="color:#58a6ff">สัญญาณเปลี่ยนทิศ</strong><br>ราคาทะลุย้อนกลับข้าม Swing ย่อย = เริ่มมีสัญญาณ Trend กำลังเปลี่ยน</p>
+      </div>
+    </div>
+
+    <div class="tip-box">
+      <strong>Tip:</strong> ดู Higher Timeframe (HTF) ก่อนเสมอ เช่น Daily → H4 → H1 เพื่อรู้ว่า Bias คือ Buy หรือ Sell
+    </div>
+  </div>
+
+  <!-- SECTION 3: Liquidity -->
+  <div class="section" id="liquidity">
+    <div class="section-title"><span class="icon">💧</span> Liquidity <span class="num">บทที่ 3</span></div>
+
+    <div class="card">
+      <p>Liquidity คือบริเวณที่มี <span class="highlight">Stop Loss ของ Retail Trader สะสมอยู่จำนวนมาก</span> สถาบันต้องการออเดอร์ขนาดใหญ่ จึงต้องเข้าไป "ล่า" บริเวณเหล่านี้ก่อน</p>
+    </div>
+
+    <div class="grid">
+      <div class="concept-box bullish">
+        <h3>BSL — Buy-Side Liquidity</h3>
+        <p>อยู่เหนือ Swing High / Double Top / Round Number<br>Stop Loss ของคนที่ Short อยู่ตรงนี้<br>ราคามักวิ่งขึ้นมา "ล่า" ก่อนแล้วค่อยลงต่อ</p>
+      </div>
+      <div class="concept-box bearish">
+        <h3>SSL — Sell-Side Liquidity</h3>
+        <p>อยู่ใต้ Swing Low / Double Bottom / Round Number<br>Stop Loss ของคนที่ Long อยู่ตรงนี้<br>ราคามักวิ่งลงมา "ล่า" ก่อนแล้วค่อยขึ้นต่อ</p>
+      </div>
+    </div>
+
+    <div class="chart-mock">  BSL --------- [Stop Loss ของ Short] ← ราคาพุ่งขึ้นล่า แล้วลงต่อ
+        ↑ Swing High เก่า
+
+        ↓ Swing Low เก่า
+  SSL --------- [Stop Loss ของ Long]  ← ราคาทิ่มลงล่า แล้วขึ้นต่อ</div>
+
+    <div class="warning-box">
+      <strong>⚠️ อย่าเข้า Sell ที่ Swing High ตรงๆ!</strong> รอดูว่าราคาจะพุ่งขึ้นล่า Liquidity ก่อน แล้วค่อยหาจังหวะ Sell หลังจากนั้น
+    </div>
+
+    <div class="card">
+      <h3>ประเภท Liquidity ที่ต้องรู้</h3>
+      <table>
+        <tr><th>ประเภท</th><th>ตำแหน่ง</th><th>ความสำคัญ</th></tr>
+        <tr><td>Equal Highs (EQH)</td><td>ราคาทำ High สองครั้งในระดับเดียวกัน</td><td>สูงมาก — ชัดเจน</td></tr>
+        <tr><td>Equal Lows (EQL)</td><td>ราคาทำ Low สองครั้งในระดับเดียวกัน</td><td>สูงมาก — ชัดเจน</td></tr>
+        <tr><td>Swing High/Low</td><td>จุด High/Low ของ Swing แต่ละลูก</td><td>ปานกลาง</td></tr>
+        <tr><td>Round Numbers</td><td>ตัวเลขกลม เช่น 1.3000, 50000</td><td>ปานกลาง</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- SECTION 4: Order Block -->
+  <div class="section" id="orderblock">
+    <div class="section-title"><span class="icon">📦</span> Order Block (OB) <span class="num">บทที่ 4</span></div>
+
+    <div class="card">
+      <p>Order Block คือ <span class="highlight">แท่งเทียนสุดท้ายก่อนที่ราคาจะเคลื่อนออกอย่างรุนแรง (Impulse Move)</span> เป็นบริเวณที่สถาบันเข้าออเดอร์ขนาดใหญ่ไว้ ราคามักกลับมาทดสอบบริเวณนี้อีกครั้ง</p>
+    </div>
+
+    <div class="grid">
+      <div class="concept-box bullish">
+        <h3>Bullish OB (ซื้อ)</h3>
+        <p>แท่งแดงสุดท้าย ก่อนที่ราคาจะพุ่งขึ้นแรงและทำ BOS ขาขึ้น<br><br><strong style="color:#3fb950">Zone ซื้อ = บริเวณ High-Low ของแท่งแดงนั้น</strong></p>
+      </div>
+      <div class="concept-box bearish">
+        <h3>Bearish OB (ขาย)</h3>
+        <p>แท่งเขียวสุดท้าย ก่อนที่ราคาจะดิ่งลงแรงและทำ BOS ขาลง<br><br><strong style="color:#f85149">Zone ขาย = บริเวณ High-Low ของแท่งเขียวนั้น</strong></p>
+      </div>
+    </div>
+
+    <div class="chart-mock">  Bullish Order Block:
+
+  |   ← แท่งแดง (OB) — Zone ซื้อเมื่อราคากลับมา
+  |
+      ↑↑↑↑↑  ← Impulse Move ขึ้น
+            ↑ BOS (ทะลุ Swing High เก่า)
+
+  ราคากลับลงมา Test OB → จังหวะ BUY</div>
+
+    <div class="rule-box">
+      <strong>กฎ OB ที่ดี:</strong>
+      <ul style="margin-top: 8px; color: #8b949e; padding-left: 20px;">
+        <li>ต้องมี Imbalance (FVG) เกิดขึ้นหลัง OB</li>
+        <li>OB ต้องอยู่ในทิศทางของ HTF Bias</li>
+        <li>OB ยังไม่เคยถูก Mitigated (ราคายังไม่กลับมาสัมผัส)</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- SECTION 5: FVG -->
+  <div class="section" id="fvg">
+    <div class="section-title"><span class="icon">⚡</span> Fair Value Gap (FVG) <span class="num">บทที่ 5</span></div>
+
+    <div class="card">
+      <p>FVG คือ <span class="highlight">ช่องว่างที่เกิดขึ้นเมื่อราคาเคลื่อนที่เร็วมาก</span> จนแท่งเทียน 3 แท่งไม่ Overlap กัน บริเวณนี้คือ "ราคาไม่ยุติธรรม" ตลาดมักกลับมา Fill ช่องว่างนี้</p>
+    </div>
+
+    <div class="chart-mock">  FVG เกิดจาก 3 แท่งเทียน:
+
+  แท่ง 1: High = 100
+  แท่ง 2: พุ่งขึ้น Low=102, High=110  ← แท่งกลางที่พุ่ง
+  แท่ง 3: Low = 108
+
+  FVG = บริเวณ 100-108
+        (ช่องว่างระหว่าง High ของแท่ง 1 และ Low ของแท่ง 3)</div>
+
+    <div class="grid">
+      <div class="concept-box bullish">
+        <h3>Bullish FVG</h3>
+        <p>เกิดในการพุ่งขึ้น<br>บริเวณ: High[1] ถึง Low[3]<br>ราคากลับลงมา Fill → จังหวะ Buy</p>
+      </div>
+      <div class="concept-box bearish">
+        <h3>Bearish FVG</h3>
+        <p>เกิดในการดิ่งลง<br>บริเวณ: Low[1] ถึง High[3]<br>ราคากลับขึ้นมา Fill → จังหวะ Sell</p>
+      </div>
+    </div>
+
+    <div class="tip-box">
+      <strong>Tip:</strong> FVG + OB ที่อยู่ด้วยกันเรียกว่า "OB ที่มี Confluence" — มีน้ำหนักมากกว่าปกติ
+    </div>
+  </div>
+
+  <!-- SECTION 6: POI -->
+  <div class="section" id="poi">
+    <div class="section-title"><span class="icon">🎯</span> POI — Point of Interest <span class="num">บทที่ 6</span></div>
+
+    <div class="card">
+      <p>POI คือ <span class="highlight">บริเวณที่เราคาดว่าสถาบันจะเข้าออเดอร์</span> รวมเอา Order Block + FVG + Liquidity มาประกอบกัน เพื่อหาจุดเข้าที่มีความน่าจะเป็นสูง</p>
+    </div>
+
+    <div class="card">
+      <h3>Premium vs Discount Zone</h3>
+      <p style="margin-bottom: 12px;">ใช้ Fibonacci 0-100% ของ Swing ล่าสุด</p>
+      <div class="grid">
+        <div style="text-align:center; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 16px;">
+          <div style="color: #f85149; font-weight: 700; font-size: 1.1rem;">Premium Zone</div>
+          <div style="color: #8b949e; font-size: 0.85rem;">50% - 100% (บน)</div>
+          <div style="color: #f85149; margin-top: 8px;">= บริเวณ SELL</div>
+        </div>
+        <div style="text-align:center; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 16px;">
+          <div style="color: #f0c040; font-weight: 700;">Equilibrium</div>
+          <div style="color: #8b949e; font-size: 0.85rem;">50% (กลาง)</div>
+          <div style="color: #f0c040; margin-top: 8px;">= Fair Value</div>
+        </div>
+        <div style="text-align:center; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 16px;">
+          <div style="color: #3fb950; font-weight: 700; font-size: 1.1rem;">Discount Zone</div>
+          <div style="color: #8b949e; font-size: 0.85rem;">0% - 50% (ล่าง)</div>
+          <div style="color: #3fb950; margin-top: 8px;">= บริเวณ BUY</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rule-box">
+      <strong>หลักการ POI ที่ดี:</strong> Discount Zone + Bullish OB + Bullish FVG + SSL ถูกล่าแล้ว = POI Buy คุณภาพสูง
+    </div>
+  </div>
+
+  <!-- SECTION 7: Entry Model -->
+  <div class="section" id="entry">
+    <div class="section-title"><span class="icon">🚀</span> Entry Model <span class="num">บทที่ 7</span></div>
+
+    <div class="card">
+      <p>เมื่อรู้ทิศทางและหา POI ได้แล้ว ขั้นตอนต่อไปคือ <span class="highlight">รอสัญญาณยืนยันบน Lower Timeframe</span> ก่อนเข้าออเดอร์</p>
+    </div>
+
+    <div class="step-list">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h3>กำหนด HTF Bias</h3>
+          <p>ดู Daily/H4 ว่า Market Structure เป็น Bullish หรือ Bearish? ต้องการ Buy หรือ Sell?</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h3>ระบุ Liquidity ที่จะถูกล่า</h3>
+          <p>ดูว่า BSL หรือ SSL อยู่ตรงไหน ราคาน่าจะไปล่าที่ใดก่อน?</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h3>หา POI บน MTF</h3>
+          <p>ดู H4/H1 หา Order Block หรือ FVG ที่อยู่ใน Discount Zone (ถ้า Bias Buy)</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <h3>รอยืนยันบน LTF</h3>
+          <p>ดู M15/M5 รอ CHoCH เล็กๆ หรือ BOS เล็กๆ เพื่อยืนยันทิศทาง หรือรอราคากลับมาหา OB</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <h3>เข้าออเดอร์ + วาง SL/TP</h3>
+          <p>SL วางไว้ใต้ OB (ถ้า Buy) / เหนือ OB (ถ้า Sell) — TP ตั้งที่ Liquidity ถัดไป หรือ RR 1:2-1:3</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Timeframe Top-Down Analysis</h3>
+      <div class="flow">
+        <div class="flow-item">📅 Weekly/Daily<br><small style="color:#8b949e">กำหนด Bias</small></div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-item">⏰ H4/H1<br><small style="color:#8b949e">หา POI</small></div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-item">⏱️ M15/M5<br><small style="color:#8b949e">รอยืนยัน</small></div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-item">⚡ M1/M5<br><small style="color:#8b949e">เข้าออเดอร์</small></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 8: Checklist -->
+  <div class="section" id="checklist">
+    <div class="section-title"><span class="icon">✅</span> Checklist ก่อนเข้าออเดอร์ <span class="num">บทที่ 8</span></div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>HTF Analysis</h3>
+        <ul class="checklist">
+          <li>รู้ HTF Bias แล้ว (Buy หรือ Sell)</li>
+          <li>ระบุ Market Structure ได้ชัดเจน</li>
+          <li>รู้ว่า Liquidity อยู่ที่ไหน</li>
+          <li>ราคาอยู่ใน Premium หรือ Discount</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>POI Quality</h3>
+        <ul class="checklist">
+          <li>POI อยู่ในทิศทาง HTF Bias</li>
+          <li>มี Order Block ที่ชัดเจน</li>
+          <li>มี FVG หนุนอยู่</li>
+          <li>OB ยังไม่ถูก Mitigated</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>LTF Confirmation</h3>
+        <ul class="checklist">
+          <li>เห็น CHoCH หรือ BOS บน LTF</li>
+          <li>ราคา Respect OB/FVG ที่หา</li>
+          <li>Liquidity ถูกล่าแล้ว</li>
+          <li>ไม่มี Major News ในช่วงเวลาใกล้ๆ</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Risk Management</h3>
+        <ul class="checklist">
+          <li>SL วางไว้อย่างสมเหตุสมผล</li>
+          <li>RR อย่างน้อย 1:2</li>
+          <li>Risk ต่อเทรดไม่เกิน 1-2%</li>
+          <li>ไม่ Revenge Trade หากขาดทุน</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="warning-box">
+      <strong>⚠️ สิ่งที่ต้องระวัง:</strong> SMC ไม่ใช่ "Holy Grail" — ยังมีโอกาสผิดพลาด ต้อง Backtest และฝึกดู Pattern ซ้ำๆ หลายร้อยครั้งก่อนเทรดจริง
+    </div>
+
+    <div class="card" style="border-color: #f0c040;">
+      <h3 style="color:#f0c040;">สรุปภาษาง่ายๆ</h3>
+      <p style="color:#8b949e; line-height: 2;">
+        1. ดู HTF ว่าตลาดไปทางไหน (Bullish/Bearish)<br>
+        2. รอให้ราคาไปล่า Liquidity ก่อน (ล่า Stop Loss)<br>
+        3. หา OB หรือ FVG ใน Discount (ถ้า Buy) หรือ Premium (ถ้า Sell)<br>
+        4. รอยืนยันบน LTF ว่าทิศทางเปลี่ยน (CHoCH)<br>
+        5. เข้า ตั้ง SL ใต้ OB, TP ที่ Liquidity ถัดไป
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <p>สื่อการสอน SMC Trading — เพื่อการศึกษาเท่านั้น</p>
+  <p style="margin-top: 8px; color: #484f58;">การเทรดมีความเสี่ยง ศึกษาให้เข้าใจดีก่อนใช้เงินจริง</p>
+</footer>
+
+</body>
+</html>

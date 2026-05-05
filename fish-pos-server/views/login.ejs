@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fish POS — เข้าสู่ระบบ</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0a1628;
+      background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(14,165,233,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(56,189,248,0.05) 0%, transparent 50%);
+      color: #e2e8f0;
+      font-family: 'Segoe UI', 'Noto Sans Thai', sans-serif;
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .card {
+      background: #0f2044;
+      border: 1px solid #1e3a5f;
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      width: 100%; max-width: 400px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+    }
+    .logo { text-align: center; margin-bottom: 1.8rem; }
+    .logo .fish-icon { font-size: 3rem; line-height: 1; }
+    .logo h1 {
+      font-size: 1.5rem; font-weight: 700; color: #38bdf8;
+      margin-top: 0.4rem; letter-spacing: 0.5px;
+    }
+    .logo p { font-size: 0.85rem; color: #64748b; margin-top: 0.2rem; }
+    .error-box {
+      background: rgba(239,68,68,0.12);
+      border: 1px solid rgba(239,68,68,0.4);
+      color: #fca5a5;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 0.875rem;
+      margin-bottom: 1.2rem;
+    }
+    .info-box {
+      background: rgba(56,189,248,0.1);
+      border: 1px solid rgba(56,189,248,0.35);
+      color: #7dd3fc;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 0.875rem;
+      margin-bottom: 1.2rem;
+    }
+    label {
+      display: block;
+      font-size: 0.8rem; font-weight: 600; color: #94a3b8;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 0.4rem; margin-top: 1rem;
+    }
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      background: #0a1628;
+      border: 1px solid #1e3a5f;
+      border-radius: 8px;
+      color: #e2e8f0;
+      font-size: 1rem;
+      padding: 0.65rem 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input[type="text"]:focus, input[type="password"]:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 3px rgba(56,189,248,0.1);
+    }
+    .btn {
+      display: block; width: 100%; margin-top: 1.5rem; padding: 0.75rem;
+      background: linear-gradient(135deg, #0284c7, #0ea5e9);
+      color: #fff; font-size: 1rem; font-weight: 700;
+      border: none; border-radius: 8px; cursor: pointer;
+      letter-spacing: 0.3px; transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn:hover { opacity: 0.92; }
+    .btn:active { transform: scale(0.98); }
+    .footer-links {
+      text-align: center; margin-top: 1.2rem;
+      font-size: 0.82rem; color: #475569;
+    }
+    .footer-links a { color: #38bdf8; text-decoration: none; }
+    .footer-links a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <div class="fish-icon">🐟</div>
+      <h1>Fish POS</h1>
+      <p>ระบบจัดการร้านปลา — Multi Branch</p>
+    </div>
+
+    <% if (error) { %>
+      <div class="error-box">&#9888; <%= error %></div>
+    <% } %>
+
+    <% if (info) { %>
+      <div class="info-box">&#8505; <%= info %></div>
+    <% } %>
+
+    <form method="POST" action="/login">
+      <label for="username">ชื่อผู้ใช้</label>
+      <input type="text" id="username" name="username" placeholder="กรอกชื่อผู้ใช้" autocomplete="username" required>
+
+      <label for="password">รหัสผ่าน</label>
+      <input type="password" id="password" name="password" placeholder="กรอกรหัสผ่าน" autocomplete="current-password" required>
+
+      <button type="submit" class="btn">เข้าสู่ระบบ</button>
+    </form>
+
+    <div class="footer-links">
+      มีรหัสเชิญ? <a href="/register">สมัครสมาชิก</a>
+    </div>
+  </div>
+</body>
+</html>

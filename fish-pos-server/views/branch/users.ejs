@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ผู้ใช้สาขา — Fish POS</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0a1628; color: #e2e8f0;
+      font-family: 'Segoe UI', 'Noto Sans Thai', sans-serif;
+      min-height: 100vh;
+    }
+    header {
+      background: #0f2044; border-bottom: 1px solid #1e3a5f;
+      padding: 0.9rem 1.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem; flex-wrap: wrap;
+    }
+    .brand { display: flex; align-items: center; gap: 0.6rem; }
+    .brand .fish { font-size: 1.5rem; }
+    .brand h1 { font-size: 1.1rem; font-weight: 700; color: #38bdf8; }
+    nav a {
+      color: #94a3b8; text-decoration: none; font-size: 0.85rem;
+      padding: 0.35rem 0.75rem; border-radius: 6px;
+    }
+    nav a:hover, nav a.active { background: #1e3a5f; color: #38bdf8; }
+    .user-chip { display: flex; align-items: center; gap: 0.5rem; }
+    .user-chip .name {
+      font-size: 0.82rem; color: #94a3b8; padding: 0.3rem 0.7rem;
+      background: #1e3a5f; border-radius: 999px;
+    }
+    .logout-link {
+      font-size: 0.82rem; color: #f87171; text-decoration: none;
+      padding: 0.3rem 0.7rem; border: 1px solid rgba(248,113,113,0.3);
+      border-radius: 999px;
+    }
+    main { padding: 2rem 1.5rem; max-width: 1100px; margin: 0 auto; }
+    h2 { font-size: 1.2rem; font-weight: 700; color: #e2e8f0; margin-bottom: 1.5rem; }
+    .msg-banner {
+      background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.35);
+      color: #7dd3fc; border-radius: 8px; padding: 0.75rem 1rem;
+      margin-bottom: 1.2rem; font-size: 0.88rem; word-break: break-all;
+    }
+    .two-col { display: grid; grid-template-columns: 1fr 300px; gap: 1.5rem; }
+    @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } }
+    .card { background: #0f2044; border: 1px solid #1e3a5f; border-radius: 12px; overflow: hidden; }
+    .card-header {
+      padding: 0.85rem 1rem; border-bottom: 1px solid #1e3a5f;
+      font-size: 0.83rem; font-weight: 600; color: #94a3b8;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.87rem; }
+    th {
+      padding: 0.55rem 0.8rem; text-align: left;
+      font-size: 0.73rem; color: #64748b; text-transform: uppercase;
+      letter-spacing: 0.5px; font-weight: 600; border-bottom: 1px solid #1e3a5f;
+    }
+    td { padding: 0.65rem 0.8rem; border-bottom: 1px solid rgba(30,58,95,0.5); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(56,189,248,0.03); }
+    .badge {
+      display: inline-block; padding: 0.2rem 0.55rem; border-radius: 999px;
+      font-size: 0.73rem; font-weight: 600;
+    }
+    .badge.manager { background: rgba(251,191,36,0.12); color: #fcd34d; border: 1px solid rgba(251,191,36,0.3); }
+    .badge.staff { background: rgba(56,189,248,0.12); color: #7dd3fc; border: 1px solid rgba(56,189,248,0.3); }
+    .badge.cashier { background: rgba(52,211,153,0.12); color: #6ee7b7; border: 1px solid rgba(52,211,153,0.3); }
+    .badge.on { background: rgba(52,211,153,0.12); color: #6ee7b7; border: 1px solid rgba(52,211,153,0.3); }
+    .badge.off { background: rgba(248,113,113,0.12); color: #fca5a5; border: 1px solid rgba(248,113,113,0.3); }
+    .badge.used { background: rgba(52,211,153,0.12); color: #6ee7b7; border: 1px solid rgba(52,211,153,0.3); }
+    .badge.pending { background: rgba(56,189,248,0.12); color: #7dd3fc; border: 1px solid rgba(56,189,248,0.3); }
+    .badge.expired { background: rgba(248,113,113,0.12); color: #fca5a5; border: 1px solid rgba(248,113,113,0.3); }
+    .btn-sm {
+      display: inline-block; padding: 0.22rem 0.55rem;
+      font-size: 0.77rem; font-weight: 600; border: none;
+      border-radius: 6px; cursor: pointer; margin-right: 0.25rem;
+    }
+    .btn-toggle { background: #1e3a5f; color: #94a3b8; }
+    .btn-delete { background: rgba(248,113,113,0.15); color: #fca5a5; border: 1px solid rgba(248,113,113,0.3); }
+    .form-group { padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+    label { font-size: 0.78rem; color: #64748b; font-weight: 600; margin-bottom: 0.2rem; display: block; }
+    select {
+      width: 100%; background: #0a1628; border: 1px solid #1e3a5f;
+      border-radius: 8px; color: #e2e8f0; font-size: 0.9rem;
+      padding: 0.5rem 0.8rem; outline: none;
+    }
+    select:focus { border-color: #38bdf8; }
+    .btn-primary {
+      padding: 0.6rem 1rem; background: linear-gradient(135deg, #0284c7, #0ea5e9);
+      color: #fff; font-size: 0.9rem; font-weight: 700;
+      border: none; border-radius: 8px; cursor: pointer; width: 100%;
+    }
+    code {
+      background: #1e3a5f; padding: 0.15rem 0.45rem;
+      border-radius: 4px; font-size: 0.82rem; color: #7dd3fc; font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="fish">🐟</span>
+      <h1>Fish POS</h1>
+    </div>
+    <nav>
+      <a href="/branch/dashboard">Dashboard</a>
+      <a href="/branch/users" class="active">ผู้ใช้สาขา</a>
+      <a href="/pos/app">POS</a>
+    </nav>
+    <div class="user-chip">
+      <span class="name">
+        <%= session.role === 'superadmin' ? '&#11088;' : '&#128196;' %>
+        <%= session.username %>
+      </span>
+      <a href="/logout" class="logout-link">ออกจากระบบ</a>
+    </div>
+  </header>
+
+  <main>
+    <h2>
+      &#128100; ผู้ใช้
+      <% if (branch) { %> — <%= branch.name %><% } %>
+    </h2>
+
+    <% if (message) { %>
+      <div class="msg-banner">&#8505; <%= message %></div>
+    <% } %>
+
+    <div class="two-col">
+      <!-- Users table -->
+      <div>
+        <div class="card">
+          <div class="card-header">รายชื่อผู้ใช้ (<%= users.length %> คน)</div>
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>ชื่อผู้ใช้</th>
+                <th>สิทธิ์</th>
+                <th>สถานะ</th>
+                <th>สร้างเมื่อ</th>
+                <th>การดำเนินการ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (users.length === 0) { %>
+                <tr>
+                  <td colspan="6" style="text-align:center; color:#475569; padding:2rem;">
+                    ยังไม่มีผู้ใช้ในสาขานี้
+                  </td>
+                </tr>
+              <% } else { %>
+                <% users.forEach(function(u, i) { %>
+                  <tr>
+                    <td style="color:#475569"><%= u.id %></td>
+                    <td style="font-weight:600"><%= u.username %></td>
+                    <td><span class="badge <%= u.role %>"><%= u.role %></span></td>
+                    <td>
+                      <span class="badge <%= u.is_active ? 'on' : 'off' %>">
+                        <%= u.is_active ? 'Active' : 'Inactive' %>
+                      </span>
+                    </td>
+                    <td style="color:#64748b; font-size:0.8rem"><%= u.created_at ? u.created_at.slice(0,10) : '—' %></td>
+                    <td>
+                      <% if (u.id !== session.userId) { %>
+                        <form method="POST" action="/branch/users/<%= u.id %>/toggle" style="display:inline">
+                          <button type="submit" class="btn-sm btn-toggle">
+                            <%= u.is_active ? 'ปิด' : 'เปิด' %>
+                          </button>
+                        </form>
+                        <form method="POST" action="/branch/users/<%= u.id %>/delete" style="display:inline"
+                          onsubmit="return confirm('ลบผู้ใช้ <%= u.username %>?')">
+                          <button type="submit" class="btn-sm btn-delete">ลบ</button>
+                        </form>
+                      <% } else { %>
+                        <span style="font-size:0.78rem; color:#475569">(คุณ)</span>
+                      <% } %>
+                    </td>
+                  </tr>
+                <% }); %>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Invite codes table -->
+        <div style="margin-top:1.2rem;">
+          <div class="card">
+            <div class="card-header">รหัสเชิญสาขานี้</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>รหัส</th>
+                  <th>สิทธิ์</th>
+                  <th>หมดอายุ</th>
+                  <th>สถานะ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (!invites || invites.length === 0) { %>
+                  <tr>
+                    <td colspan="4" style="text-align:center; color:#475569; padding:1.5rem;">
+                      ยังไม่มีรหัสเชิญ
+                    </td>
+                  </tr>
+                <% } else { %>
+                  <% invites.forEach(function(inv) { %>
+                    <%
+                      const now = new Date();
+                      const exp = new Date(inv.expires_at);
+                      let sc = 'pending'; let st = 'รอใช้งาน';
+                      if (inv.used_by) { sc = 'used'; st = 'ใช้แล้ว ('+inv.used_by_name+')'; }
+                      else if (exp < now) { sc = 'expired'; st = 'หมดอายุ'; }
+                    %>
+                    <tr>
+                      <td><code><%= inv.code %></code></td>
+                      <td><%= inv.role %></td>
+                      <td style="color:#64748b; font-size:0.8rem"><%= inv.expires_at ? inv.expires_at.slice(0,16) : '—' %></td>
+                      <td><span class="badge <%= sc %>"><%= st %></span></td>
+                    </tr>
+                  <% }); %>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Side: create invite -->
+      <div>
+        <div class="card">
+          <div class="card-header">&#128179; สร้างรหัสเชิญ</div>
+          <form method="POST" action="/branch/invite" class="form-group">
+            <div>
+              <label>สิทธิ์</label>
+              <select name="role">
+                <% if (session.role === 'superadmin') { %>
+                  <option value="manager">Manager</option>
+                <% } %>
+                <option value="staff" selected>Staff</option>
+                <option value="cashier">Cashier</option>
+              </select>
+            </div>
+            <button type="submit" class="btn-primary">สร้างรหัสเชิญ</button>
+          </form>
+          <div style="padding:0 1rem 1rem; font-size:0.78rem; color:#475569;">
+            รหัสเชิญมีอายุ 48 ชั่วโมง<br>
+            ลิงก์: <code>http://localhost:3000/register?code=XXXXXX</code>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

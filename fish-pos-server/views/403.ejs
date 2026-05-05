@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>403 — ไม่มีสิทธิ์เข้าถึง</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0a1628; color: #e2e8f0;
+      font-family: 'Segoe UI', 'Noto Sans Thai', sans-serif;
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .box {
+      text-align: center; max-width: 420px;
+      background: #0f2044; border: 1px solid #1e3a5f;
+      border-radius: 16px; padding: 3rem 2rem;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+    }
+    .icon { font-size: 3.5rem; margin-bottom: 1rem; }
+    h1 { color: #f87171; font-size: 1.8rem; margin-bottom: 0.5rem; }
+    p { color: #94a3b8; margin-bottom: 0.4rem; font-size: 0.95rem; }
+    .badge {
+      display: inline-block; margin: 0.3rem 0.2rem;
+      padding: 0.2rem 0.7rem; border-radius: 999px;
+      font-size: 0.8rem; font-weight: 600;
+      background: rgba(248,113,113,0.15);
+      border: 1px solid rgba(248,113,113,0.4);
+      color: #fca5a5;
+    }
+    .links { margin-top: 1.5rem; }
+    a { color: #38bdf8; text-decoration: none; margin: 0 0.5rem; font-size: 0.9rem; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div class="icon">&#128683;</div>
+    <h1>403</h1>
+    <p>คุณไม่มีสิทธิ์เข้าถึงหน้านี้</p>
+    <% if (role) { %>
+      <p>สิทธิ์ปัจจุบัน: <span class="badge"><%= role %></span></p>
+    <% } %>
+    <% if (required && required.length > 0) { %>
+      <p>ต้องการสิทธิ์:
+        <% required.forEach(function(r) { %>
+          <span class="badge"><%= r %></span>
+        <% }); %>
+      </p>
+    <% } %>
+    <div class="links">
+      <a href="/pos/app">&#8592; POS</a>
+      <a href="/login">เข้าสู่ระบบ</a>
+      <a href="/logout">ออกจากระบบ</a>
+    </div>
+  </div>
+</body>
+</html>

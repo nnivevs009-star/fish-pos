@@ -1,0 +1,15 @@
+{
+  "name": "fish-pos-server",
+  "version": "2.0.0",
+  "description": "Fish POS Multi-Branch Auth Server",
+  "main": "server.js",
+  "scripts": { "start": "node server.js", "seed": "node seed.js" },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "better-sqlite3": "^9.4.3",
+    "connect-sqlite3": "^0.9.13",
+    "ejs": "^3.1.9",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3"
+  }
+}

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Branch Dashboard — Fish POS</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0a1628; color: #e2e8f0;
+      font-family: 'Segoe UI', 'Noto Sans Thai', sans-serif;
+      min-height: 100vh;
+    }
+    header {
+      background: #0f2044; border-bottom: 1px solid #1e3a5f;
+      padding: 0.9rem 1.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem; flex-wrap: wrap;
+    }
+    .brand { display: flex; align-items: center; gap: 0.6rem; }
+    .brand .fish { font-size: 1.5rem; }
+    .brand h1 { font-size: 1.1rem; font-weight: 700; color: #38bdf8; }
+    nav a {
+      color: #94a3b8; text-decoration: none; font-size: 0.85rem;
+      padding: 0.35rem 0.75rem; border-radius: 6px;
+    }
+    nav a:hover, nav a.active { background: #1e3a5f; color: #38bdf8; }
+    .user-chip { display: flex; align-items: center; gap: 0.5rem; }
+    .user-chip .name {
+      font-size: 0.82rem; color: #94a3b8; padding: 0.3rem 0.7rem;
+      background: #1e3a5f; border-radius: 999px;
+    }
+    .logout-link {
+      font-size: 0.82rem; color: #f87171; text-decoration: none;
+      padding: 0.3rem 0.7rem; border: 1px solid rgba(248,113,113,0.3);
+      border-radius: 999px;
+    }
+    main { padding: 2rem 1.5rem; max-width: 1000px; margin: 0 auto; }
+    .branch-hero {
+      background: linear-gradient(135deg, #0f2044, #0a1f3d);
+      border: 1px solid #1e3a5f; border-radius: 14px;
+      padding: 1.5rem 2rem; margin-bottom: 1.5rem;
+    }
+    .branch-hero .label { font-size: 0.78rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+    .branch-hero .name { font-size: 1.6rem; font-weight: 700; color: #38bdf8; margin-top: 0.3rem; }
+    .branch-hero .loc { font-size: 0.88rem; color: #94a3b8; margin-top: 0.2rem; }
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 1rem; margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: #0f2044; border: 1px solid #1e3a5f;
+      border-radius: 12px; padding: 1.1rem 1.3rem;
+    }
+    .stat-card .label { font-size: 0.76rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-card .value { font-size: 1.8rem; font-weight: 700; color: #38bdf8; margin-top: 0.25rem; }
+    .action-btns { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .btn-action {
+      padding: 0.6rem 1.2rem; border-radius: 8px;
+      font-size: 0.88rem; font-weight: 600; border: none;
+      cursor: pointer; text-decoration: none; display: inline-block;
+      transition: opacity 0.15s;
+    }
+    .btn-action:hover { opacity: 0.88; }
+    .btn-primary { background: linear-gradient(135deg, #0284c7, #0ea5e9); color: #fff; }
+    .btn-secondary { background: #1e3a5f; color: #94a3b8; }
+    .btn-green { background: rgba(52,211,153,0.15); color: #6ee7b7; border: 1px solid rgba(52,211,153,0.3); }
+    .section-title {
+      font-size: 0.85rem; font-weight: 600; color: #94a3b8;
+      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.75rem;
+    }
+    .card { background: #0f2044; border: 1px solid #1e3a5f; border-radius: 12px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th {
+      padding: 0.55rem 0.8rem; text-align: left;
+      font-size: 0.73rem; color: #64748b; text-transform: uppercase;
+      letter-spacing: 0.5px; font-weight: 600; border-bottom: 1px solid #1e3a5f;
+    }
+    td { padding: 0.65rem 0.8rem; border-bottom: 1px solid rgba(30,58,95,0.5); }
+    tr:last-child td { border-bottom: none; }
+    .badge {
+      display: inline-block; padding: 0.18rem 0.55rem; border-radius: 999px;
+      font-size: 0.73rem; font-weight: 600;
+    }
+    .badge.used { background: rgba(52,211,153,0.12); color: #6ee7b7; border: 1px solid rgba(52,211,153,0.3); }
+    .badge.pending { background: rgba(56,189,248,0.12); color: #7dd3fc; border: 1px solid rgba(56,189,248,0.3); }
+    .badge.expired { background: rgba(248,113,113,0.12); color: #fca5a5; border: 1px solid rgba(248,113,113,0.3); }
+    code {
+      background: #1e3a5f; padding: 0.15rem 0.45rem;
+      border-radius: 4px; font-size: 0.82rem; color: #7dd3fc;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="fish">🐟</span>
+      <h1>Fish POS</h1>
+    </div>
+    <nav>
+      <a href="/branch/dashboard" class="active">Dashboard</a>
+      <a href="/branch/users">ผู้ใช้สาขา</a>
+      <a href="/pos/app">POS</a>
+    </nav>
+    <div class="user-chip">
+      <span class="name">
+        <%= session.role === 'superadmin' ? '&#11088;' : '&#128196;' %>
+        <%= session.username %>
+      </span>
+      <a href="/logout" class="logout-link">ออกจากระบบ</a>
+    </div>
+  </header>
+
+  <main>
+    <% if (branch) { %>
+      <div class="branch-hero">
+        <div class="label">สาขาของคุณ</div>
+        <div class="name">&#127968; <%= branch.name %></div>
+        <% if (branch.location) { %>
+          <div class="loc">&#128205; <%= branch.location %></div>
+        <% } %>
+      </div>
+    <% } else { %>
+      <div class="branch-hero">
+        <div class="name">&#127968; ภาพรวมทุกสาขา (Super Admin)</div>
+      </div>
+    <% } %>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="label">Manager</div>
+        <div class="value"><%= user_counts.manager || 0 %></div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Staff</div>
+        <div class="value"><%= user_counts.staff || 0 %></div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Cashier</div>
+        <div class="value"><%= user_counts.cashier || 0 %></div>
+      </div>
+    </div>
+
+    <div class="action-btns">
+      <a href="/branch/users" class="btn-action btn-primary">&#128100; จัดการผู้ใช้</a>
+      <a href="/pos/app" class="btn-action btn-green">&#128180; เปิด POS</a>
+    </div>
+
+    <div class="section-title">รหัสเชิญล่าสุด</div>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>รหัส</th>
+            <th>สิทธิ์</th>
+            <th>สร้างโดย</th>
+            <th>หมดอายุ</th>
+            <th>สถานะ</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (!invite_codes || invite_codes.length === 0) { %>
+            <tr>
+              <td colspan="5" style="text-align:center; color:#475569; padding:1.5rem;">
+                ยังไม่มีรหัสเชิญ —
+                <a href="/branch/users" style="color:#38bdf8">สร้างรหัสเชิญ</a>
+              </td>
+            </tr>
+          <% } else { %>
+            <% invite_codes.forEach(function(inv) { %>
+              <%
+                const now = new Date();
+                const exp = new Date(inv.expires_at);
+                let statusClass = 'pending';
+                let statusText = 'รอใช้งาน';
+                if (inv.used_by) { statusClass = 'used'; statusText = 'ใช้แล้ว'; }
+                else if (exp < now) { statusClass = 'expired'; statusText = 'หมดอายุ'; }
+              %>
+              <tr>
+                <td><code><%= inv.code %></code></td>
+                <td style="color:#94a3b8"><%= inv.role %></td>
+                <td style="color:#94a3b8"><%= inv.creator_name || '—' %></td>
+                <td style="color:#64748b; font-size:0.8rem"><%= inv.expires_at ? inv.expires_at.slice(0,16) : '—' %></td>
+                <td><span class="badge <%= statusClass %>"><%= statusText %></span></td>
+              </tr>
+            <% }); %>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</body>
+</html>

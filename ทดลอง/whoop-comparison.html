@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WHOOP — รายงานเปรียบเทียบสินค้า</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Sarabun', 'Segoe UI', sans-serif;
+    background: #f5f5f0;
+    color: #1a1a1a;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  /* ---- Cover Page ---- */
+  .cover {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
+    background: #0a0a0a;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 60px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 30% 50%, #1a2a4a 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 50%, #1a3a2a 0%, transparent 60%);
+  }
+  .cover-content { position: relative; z-index: 1; }
+  .cover-logo {
+    font-size: 5rem; font-weight: 900; letter-spacing: -2px;
+    color: #00c4ff; margin-bottom: 8px;
+  }
+  .cover-subtitle { color: #8a8a8a; font-size: 1rem; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 60px; }
+  .cover-title { font-size: 2rem; font-weight: 700; color: #ffffff; margin-bottom: 16px; line-height: 1.3; }
+  .cover-desc { color: #a0a0a0; font-size: 1rem; max-width: 400px; margin: 0 auto 60px; }
+  .cover-meta { color: #606060; font-size: 0.85rem; }
+  .cover-line { width: 60px; height: 2px; background: #00c4ff; margin: 30px auto; }
+
+  /* ---- Page wrapper ---- */
+  .page {
+    width: 210mm;
+    margin: 0 auto;
+    background: #ffffff;
+    padding: 20mm 18mm;
+  }
+  .page + .page { border-top: 8px solid #f5f5f0; }
+
+  /* ---- Section headers ---- */
+  .section { margin-bottom: 28px; }
+  .section-header {
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 3px solid #0a0a0a;
+    padding-bottom: 8px; margin-bottom: 18px;
+  }
+  .section-num {
+    background: #0a0a0a; color: #00c4ff;
+    font-size: 0.75rem; font-weight: 700; letter-spacing: 2px;
+    padding: 4px 10px; border-radius: 4px;
+  }
+  .section-title { font-size: 1.2rem; font-weight: 700; color: #0a0a0a; }
+
+  /* ---- Intro box ---- */
+  .intro-box {
+    background: #0a0a0a; color: #e0e0e0;
+    border-radius: 10px; padding: 20px 24px; margin-bottom: 20px;
+    line-height: 1.8;
+  }
+  .intro-box strong { color: #00c4ff; }
+
+  /* ---- Pros / Cons ---- */
+  .pro-con-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .pro-box, .con-box {
+    border-radius: 8px; padding: 16px;
+  }
+  .pro-box { background: #f0faf3; border: 1.5px solid #34a853; }
+  .con-box { background: #fdf3f2; border: 1.5px solid #ea4335; }
+  .pro-box h3 { color: #1e7e34; margin-bottom: 10px; font-size: 0.95rem; }
+  .con-box h3 { color: #c0392b; margin-bottom: 10px; font-size: 0.95rem; }
+  .pro-box ul, .con-box ul { list-style: none; padding: 0; }
+  .pro-box li, .con-box li { padding: 5px 0; font-size: 0.88rem; border-bottom: 1px solid rgba(0,0,0,0.06); color: #333; }
+  .pro-box li:last-child, .con-box li:last-child { border-bottom: none; }
+  .pro-box li::before { content: "✓ "; color: #34a853; font-weight: 700; }
+  .con-box li::before { content: "✗ "; color: #ea4335; font-weight: 700; }
+
+  /* ---- Pricing ---- */
+  .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .price-card {
+    border-radius: 10px; padding: 18px; text-align: center;
+    border: 1.5px solid #e0e0e0;
+  }
+  .price-card.highlight { background: #0a0a0a; border-color: #0a0a0a; color: white; }
+  .price-card .plan-name { font-size: 0.75rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; color: #888; }
+  .price-card.highlight .plan-name { color: #00c4ff; }
+  .price-card .price-main { font-size: 2rem; font-weight: 900; color: #0a0a0a; }
+  .price-card.highlight .price-main { color: #ffffff; }
+  .price-card .price-period { font-size: 0.8rem; color: #888; margin-bottom: 12px; }
+  .price-card.highlight .price-period { color: #aaa; }
+  .price-card .price-annual { font-size: 0.82rem; color: #555; border-top: 1px solid #eee; padding-top: 10px; }
+  .price-card.highlight .price-annual { color: #bbb; border-color: #333; }
+  .price-card .features { text-align: left; margin-top: 12px; font-size: 0.8rem; color: #555; }
+  .price-card.highlight .features { color: #ccc; }
+  .price-card .features li { padding: 3px 0; }
+  .price-card .features li::before { content: "• "; color: #00c4ff; }
+
+  /* ---- Comparison Table ---- */
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin: 12px 0; }
+  th {
+    background: #0a0a0a; color: #ffffff; padding: 10px 12px;
+    text-align: left; font-weight: 600; letter-spacing: 0.5px;
+  }
+  th:first-child { border-radius: 6px 0 0 0; }
+  th:last-child { border-radius: 0 6px 0 0; }
+  td { padding: 9px 12px; border-bottom: 1px solid #eeeeee; vertical-align: top; }
+  tr:nth-child(even) td { background: #fafafa; }
+  tr:hover td { background: #f0f8ff; }
+  .badge-green { background: #e8f5e9; color: #1b5e20; border-radius: 4px; padding: 2px 8px; font-size: 0.75rem; font-weight: 600; }
+  .badge-red { background: #ffebee; color: #b71c1c; border-radius: 4px; padding: 2px 8px; font-size: 0.75rem; font-weight: 600; }
+  .badge-yellow { background: #fff8e1; color: #f57f17; border-radius: 4px; padding: 2px 8px; font-size: 0.75rem; font-weight: 600; }
+
+  /* ---- Target user ---- */
+  .user-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .user-card {
+    border-radius: 8px; padding: 16px;
+    border: 1.5px solid #e0e0e0;
+  }
+  .user-card h3 { font-size: 0.9rem; margin-bottom: 8px; }
+  .user-card ul { list-style: none; padding: 0; }
+  .user-card li { font-size: 0.84rem; padding: 4px 0; color: #444; border-bottom: 1px solid #f0f0f0; }
+  .user-card li:last-child { border-bottom: none; }
+  .user-card.for { border-color: #34a853; }
+  .user-card.for h3 { color: #1e7e34; }
+  .user-card.for li::before { content: "✓ "; color: #34a853; }
+  .user-card.not { border-color: #ea4335; }
+  .user-card.not h3 { color: #c0392b; }
+  .user-card.not li::before { content: "✗ "; color: #ea4335; }
+
+  /* ---- Score bars ---- */
+  .score-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .score-label { width: 160px; font-size: 0.82rem; color: #555; flex-shrink: 0; }
+  .score-bar-bg { flex: 1; background: #f0f0f0; border-radius: 4px; height: 8px; }
+  .score-bar { height: 8px; border-radius: 4px; background: #0a0a0a; }
+  .score-val { width: 32px; text-align: right; font-size: 0.8rem; font-weight: 700; color: #0a0a0a; }
+
+  /* ---- Verdict ---- */
+  .verdict-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .verdict-card {
+    border-radius: 8px; padding: 16px; background: #f9f9f9; border: 1.5px solid #ddd;
+  }
+  .verdict-card .device-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
+  .verdict-card .device-tag {
+    display: inline-block; font-size: 0.7rem; font-weight: 700;
+    padding: 2px 8px; border-radius: 10px; margin-bottom: 10px;
+    background: #e8f5e9; color: #1b5e20;
+  }
+  .verdict-card p { font-size: 0.82rem; color: #555; }
+  .verdict-card .best-for { margin-top: 8px; font-size: 0.8rem; color: #333; }
+  .verdict-card .best-for strong { color: #0a0a0a; }
+
+  /* ---- Summary box ---- */
+  .summary-box {
+    background: #0a0a0a; color: #e0e0e0; border-radius: 10px;
+    padding: 24px 28px; margin-top: 20px;
+  }
+  .summary-box h3 { color: #00c4ff; margin-bottom: 16px; font-size: 1.1rem; }
+  .summary-box p { font-size: 0.88rem; line-height: 1.9; }
+  .summary-box strong { color: #ffffff; }
+
+  /* ---- Footnote ---- */
+  .footnote {
+    margin-top: 30px; padding-top: 16px; border-top: 1px solid #ddd;
+    font-size: 0.75rem; color: #999; text-align: center;
+  }
+
+  /* ---- Print styles ---- */
+  @media print {
+    body { background: white; }
+    .cover { page-break-after: always; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { page-break-before: auto; box-shadow: none; }
+    .no-print { display: none; }
+  }
+
+  /* ---- Print button ---- */
+  .print-btn {
+    position: fixed; bottom: 30px; right: 30px; z-index: 999;
+    background: #0a0a0a; color: #00c4ff;
+    border: 2px solid #00c4ff; border-radius: 50px;
+    padding: 12px 24px; cursor: pointer;
+    font-size: 0.9rem; font-weight: 700; font-family: inherit;
+    transition: all 0.2s; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+  .print-btn:hover { background: #00c4ff; color: #0a0a0a; }
+</style>
+</head>
+<body>
+
+<button class="print-btn no-print" onclick="window.print()">🖨️ บันทึกเป็น PDF</button>
+
+<!-- ===== COVER ===== -->
+<div class="cover">
+  <div class="cover-content">
+    <div class="cover-logo">WHOOP</div>
+    <div class="cover-subtitle">Fitness Tracker Analysis Report</div>
+    <div class="cover-line"></div>
+    <div class="cover-title">รายงานวิเคราะห์ WHOOP<br>และการเปรียบเทียบในตลาด</div>
+    <div class="cover-desc">ข้อดี ข้อเสีย ราคา และการเปรียบเทียบกับ Apple Watch, Oura Ring, Garmin, Fitbit และ Samsung</div>
+    <div class="cover-line"></div>
+    <div class="cover-meta">ข้อมูลอ้างอิงจากแหล่งรีวิวชั้นนำ ปี 2024–2025<br>จัดทำ: พฤษภาคม 2026</div>
+  </div>
+</div>
+
+<!-- ===== PAGE 1: Intro + Pros/Cons ===== -->
+<div class="page">
+
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <span class="section-title">WHOOP คืออะไร?</span>
+    </div>
+    <div class="intro-box">
+      <strong>WHOOP</strong> คือ fitness tracker แบบไม่มีหน้าจอ (screenless) ที่เน้นการวัด <strong>ความพร้อมของร่างกาย (Recovery)</strong> และ <strong>ภาระที่ร่างกายรับ (Strain)</strong> ในแต่ละวัน โดยใช้ข้อมูลจาก HRV, อัตราการเต้นของหัวใจ, ออกซิเจนในเลือด, อุณหภูมิผิว และการนอนหลับ เพื่อให้คำแนะนำว่าวันนี้ควร "ออกกำลังกายหนัก" หรือ "พักฟื้น"
+      <br><br>
+      WHOOP ใช้ระบบ <strong>สมาชิกรายเดือน</strong> (subscription) แทนการซื้อครั้งเดียว และได้รับความนิยมสูงในหมู่นักกีฬาระดับอาชีพ เช่น Cristiano Ronaldo, LeBron James และ Michael Phelps — โดย 1 ใน 3 ของนักกีฬาอาชีพในสหรัฐอเมริกาใช้ WHOOP อยู่ในปัจจุบัน
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <span class="section-title">ข้อดีและข้อเสียของ WHOOP</span>
+    </div>
+    <div class="pro-con-grid">
+      <div class="pro-box">
+        <h3>✅ ข้อดี</h3>
+        <ul>
+          <li>บางเบา ใส่สบาย ไม่มีหน้าจอรบกวน</li>
+          <li>แบตเตอรี่ 4–5 วัน ชาร์จได้โดยไม่ต้องถอดออก</li>
+          <li>ติดตามการนอน 4 ระยะได้แม่นยำสูง</li>
+          <li>HRV และ Recovery Score แม่นยำ 99.7%</li>
+          <li>ให้คำแนะนำที่นำไปใช้ได้จริง (Actionable Coach)</li>
+          <li>ติดตาม SpO2, อุณหภูมิผิว, อัตราหายใจ 24/7</li>
+          <li>Strain Score วัดภาระรวมทั้งวัน (ไม่ใช่แค่ออกกำลังกาย)</li>
+          <li>กันน้ำ เหมาะสำหรับว่ายน้ำ</li>
+          <li>มีฟีเจอร์ด้านสุขภาพระดับ Medical-grade (แผน Life)</li>
+        </ul>
+      </div>
+      <div class="con-box">
+        <h3>✗ ข้อเสีย</h3>
+        <ul>
+          <li>ไม่มีหน้าจอ — ดูข้อมูลต้องผ่านแอปเท่านั้น</li>
+          <li>ไม่มี GPS — ไม่เหมาะสำหรับวิ่งนอก</li>
+          <li>ค่าสมาชิกรายเดือน ($25–40/เดือน) ค่อนข้างแพง</li>
+          <li>ตรวจจับ Weight Training ได้ไม่แม่นยำ</li>
+          <li>สายรัดอาจหลุดหลวมระหว่างนอน</li>
+          <li>แอปมีความซับซ้อน ต้องใช้เวลาเรียนรู้</li>
+          <li>ไม่มีฟีเจอร์ smartwatch (รับสาย, notification)</li>
+          <li>สายผ้าอาจอับชื้นเมื่อเปียกน้ำ</li>
+          <li>ไม่เหมาะสำหรับผู้ที่ต้องการ GPS หรือ ECG</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== PAGE 2: Pricing + Features ===== -->
+<div class="page">
+
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <span class="section-title">ราคาและแพ็กเกจ (2025)</span>
+    </div>
+    <div class="pricing-grid">
+      <div class="price-card">
+        <div class="plan-name">WHOOP ONE</div>
+        <div class="price-main">$25</div>
+        <div class="price-period">/ เดือน</div>
+        <div class="price-annual">หรือ $149–199 / ปี</div>
+        <ul class="features">
+          <li>Recovery & Strain tracking</li>
+          <li>Sleep coaching</li>
+          <li>HRV monitoring</li>
+          <li>พื้นฐาน</li>
+        </ul>
+      </div>
+      <div class="price-card highlight">
+        <div class="plan-name">WHOOP PEAK</div>
+        <div class="price-main">$30</div>
+        <div class="price-period">/ เดือน</div>
+        <div class="price-annual">หรือ $239 / ปี</div>
+        <ul class="features">
+          <li>ทุกอย่างใน ONE</li>
+          <li>Longevity metrics</li>
+          <li>Advanced monitoring</li>
+          <li>แนะนำ</li>
+        </ul>
+      </div>
+      <div class="price-card">
+        <div class="plan-name">WHOOP LIFE</div>
+        <div class="price-main">$40</div>
+        <div class="price-period">/ เดือน</div>
+        <div class="price-annual">หรือ $359 / ปี</div>
+        <ul class="features">
+          <li>ทุกอย่างใน PEAK</li>
+          <li>Medical-grade features</li>
+          <li>Cardiovascular insights</li>
+          <li>ระดับสูงสุด</li>
+        </ul>
+      </div>
+    </div>
+    <p style="font-size:0.8rem; color:#888; margin-top:10px;">* ราคาในสหรัฐอเมริกา ณ ปี 2025 — อุปกรณ์รวมอยู่ในค่าสมาชิก ไม่มีค่าซื้อเครื่องแยก</p>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">04</span>
+      <span class="section-title">คุณสมบัติหลัก (Key Features)</span>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom: 16px;">
+      <div>
+        <p style="font-size:0.85rem; font-weight:700; margin-bottom: 10px;">ความแม่นยำของแต่ละฟีเจอร์</p>
+        <div class="score-row"><span class="score-label">HRV (Heart Rate Variability)</span><div class="score-bar-bg"><div class="score-bar" style="width:96%"></div></div><span class="score-val">96%</span></div>
+        <div class="score-row"><span class="score-label">Sleep Tracking</span><div class="score-bar-bg"><div class="score-bar" style="width:93%"></div></div><span class="score-val">93%</span></div>
+        <div class="score-row"><span class="score-label">Heart Rate</span><div class="score-bar-bg"><div class="score-bar" style="width:99%"></div></div><span class="score-val">99%</span></div>
+        <div class="score-row"><span class="score-label">SpO2 / Blood Oxygen</span><div class="score-bar-bg"><div class="score-bar" style="width:88%"></div></div><span class="score-val">88%</span></div>
+        <div class="score-row"><span class="score-label">Recovery Score</span><div class="score-bar-bg"><div class="score-bar" style="width:91%"></div></div><span class="score-val">91%</span></div>
+        <div class="score-row"><span class="score-label">Strain Detection</span><div class="score-bar-bg"><div class="score-bar" style="width:82%"></div></div><span class="score-val">82%</span></div>
+        <div class="score-row"><span class="score-label">Activity Detection</span><div class="score-bar-bg"><div class="score-bar" style="width:75%"></div></div><span class="score-val">75%</span></div>
+      </div>
+      <div>
+        <p style="font-size:0.85rem; font-weight:700; margin-bottom: 10px;">ฟีเจอร์ที่มี / ไม่มี</p>
+        <table style="font-size:0.8rem;">
+          <tr><td style="padding:5px 8px;">🩺 HRV Monitoring</td><td><span class="badge-green">มี</span></td></tr>
+          <tr><td style="padding:5px 8px;">😴 Sleep Stages</td><td><span class="badge-green">มี (4 ระยะ)</span></td></tr>
+          <tr><td style="padding:5px 8px;">💧 SpO2</td><td><span class="badge-green">มี</span></td></tr>
+          <tr><td style="padding:5px 8px;">🌡️ Skin Temperature</td><td><span class="badge-green">มี</span></td></tr>
+          <tr><td style="padding:5px 8px;">📍 GPS</td><td><span class="badge-red">ไม่มี</span></td></tr>
+          <tr><td style="padding:5px 8px;">📱 Notifications</td><td><span class="badge-red">ไม่มี</span></td></tr>
+          <tr><td style="padding:5px 8px;">📞 รับสายโทรศัพท์</td><td><span class="badge-red">ไม่มี</span></td></tr>
+          <tr><td style="padding:5px 8px;">🫀 ECG</td><td><span class="badge-red">ไม่มี</span></td></tr>
+          <tr><td style="padding:5px 8px;">🏃 VO2 Max</td><td><span class="badge-yellow">บางแผน</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== PAGE 3: Comparison Table ===== -->
+<div class="page">
+
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">05</span>
+      <span class="section-title">ตารางเปรียบเทียบกับสินค้าในตลาด</span>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>ฟีเจอร์ / สินค้า</th>
+          <th>WHOOP 4.0</th>
+          <th>Apple Watch S10</th>
+          <th>Oura Ring</th>
+          <th>Garmin Fenix</th>
+          <th>Samsung Galaxy Watch</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>ราคา</strong></td>
+          <td>$25–40/เดือน</td>
+          <td>~$399 (ซื้อครั้งเดียว)</td>
+          <td>$299 + $5.99/เดือน</td>
+          <td>~$599–900</td>
+          <td>~$299–449</td>
+        </tr>
+        <tr>
+          <td><strong>หน้าจอ</strong></td>
+          <td><span class="badge-red">ไม่มี</span></td>
+          <td><span class="badge-green">มี (OLED)</span></td>
+          <td><span class="badge-red">ไม่มี</span></td>
+          <td><span class="badge-green">มี (MIP/AMOLED)</span></td>
+          <td><span class="badge-green">มี (AMOLED)</span></td>
+        </tr>
+        <tr>
+          <td><strong>GPS</strong></td>
+          <td><span class="badge-red">ไม่มี</span></td>
+          <td><span class="badge-green">มี</span></td>
+          <td><span class="badge-red">ไม่มี</span></td>
+          <td><span class="badge-green">มี (Multi-band)</span></td>
+          <td><span class="badge-green">มี</span></td>
+        </tr>
+        <tr>
+          <td><strong>แบตเตอรี่</strong></td>
+          <td>4–5 วัน</td>
+          <td>1–2 วัน</td>
+          <td>4–7 วัน</td>
+          <td>14–60 วัน</td>
+          <td>1–3 วัน</td>
+        </tr>
+        <tr>
+          <td><strong>HRV Accuracy</strong></td>
+          <td><span class="badge-green">สูงมาก</span></td>
+          <td><span class="badge-green">ดี</span></td>
+          <td><span class="badge-green">สูงมาก</span></td>
+          <td><span class="badge-yellow">ปานกลาง</span></td>
+          <td><span class="badge-yellow">ปานกลาง</span></td>
+        </tr>
+        <tr>
+          <td><strong>Sleep Tracking</strong></td>
+          <td><span class="badge-green">ดีเยี่ยม</span></td>
+          <td><span class="badge-yellow">ดี</span></td>
+          <td><span class="badge-green">ดีเยี่ยม</span></td>
+          <td><span class="badge-yellow">ดี</span></td>
+          <td><span class="badge-yellow">ดี</span></td>
+        </tr>
+        <tr>
+          <td><strong>Recovery Score</strong></td>
+          <td><span class="badge-green">มี (ดีมาก)</span></td>
+          <td><span class="badge-yellow">บางส่วน</span></td>
+          <td><span class="badge-green">มี (Readiness)</span></td>
+          <td><span class="badge-green">มี (Body Battery)</span></td>
+          <td><span class="badge-yellow">บางส่วน</span></td>
+        </tr>
+        <tr>
+          <td><strong>SpO2</strong></td>
+          <td><span class="badge-green">24/7</span></td>
+          <td><span class="badge-green">มี</span></td>
+          <td><span class="badge-green">มี</span></td>
+          <td><span class="badge-green">มี</span></td>
+          <td><span class="badge-green">มี</span></td>
+        </tr>
+        <tr>
+          <td><strong>ECG</strong></td>
+          <td><span class="badge-red">ไม่มี</span></td>
+          <td><span class="badge-green">มี</span></td>
+          <td><span class="badge-red">ไม่มี</span></td>
+          <td><span class="badge-red">ไม่มี</span></td>
+          <td><span class="badge-green">มี</span></td>
+        </tr>
+        <tr>
+          <td><strong>Smartwatch (โทร/แจ้งเตือน)</strong></td>
+          <td><span class="badge-red">ไม่มี</span></td>
+          <td><span class="badge-green">ครบถ้วน</span></td>
+          <td><span class="badge-red">ไม่มี</span></td>
+          <td><span class="badge-green">มี</span></td>
+          <td><span class="badge-green">ครบถ้วน</span></td>
+        </tr>
+        <tr>
+          <td><strong>VO2 Max</strong></td>
+          <td><span class="badge-yellow">บางแผน</span></td>
+          <td><span class="badge-green">มี</span></td>
+          <td><span class="badge-red">ไม่มี</span></td>
+          <td><span class="badge-green">มี (ละเอียดมาก)</span></td>
+          <td><span class="badge-green">มี</span></td>
+        </tr>
+        <tr>
+          <td><strong>ความสะดวกสวมใส่</strong></td>
+          <td>สูง (บางเบา)</td>
+          <td>ปานกลาง</td>
+          <td>สูงมาก (แหวน)</td>
+          <td>ปานกลาง (หนัก)</td>
+          <td>ปานกลาง</td>
+        </tr>
+        <tr>
+          <td><strong>เหมาะสำหรับ</strong></td>
+          <td>นักกีฬา Recovery</td>
+          <td>ผู้ใช้ทั่วไป / iPhone</td>
+          <td>Sleep Optimizer</td>
+          <td>นักวิ่ง/นักกีฬา Outdoor</td>
+          <td>ผู้ใช้ Android / Samsung</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ===== PAGE 4: Who is it for + Verdict ===== -->
+<div class="page">
+
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">06</span>
+      <span class="section-title">WHOOP เหมาะกับใคร?</span>
+    </div>
+    <div class="user-grid">
+      <div class="user-card for">
+        <h3>✅ เหมาะสำหรับ</h3>
+        <ul>
+          <li>นักกีฬาจริงจัง (CrossFit, Triathlon, Cycling)</li>
+          <li>คนที่ต้องการ Recovery Data ที่แม่นยำ</li>
+          <li>นักวิ่งที่ฝึกหนัก ต้องการวางแผนพัก</li>
+          <li>ผู้ที่ปัญหาการนอนหลับ ต้องการวิเคราะห์</li>
+          <li>คนทำงานที่มี stress สูง ต้องการดู HRV</li>
+          <li>Biohacker ที่ชอบข้อมูลเชิงลึก</li>
+          <li>นักกีฬาอาชีพที่ต้องการ Peak Performance</li>
+        </ul>
+      </div>
+      <div class="user-card not">
+        <h3>✗ ไม่เหมาะสำหรับ</h3>
+        <ul>
+          <li>คนที่ต้องการ GPS สำหรับวิ่งนอก</li>
+          <li>ผู้ที่ต้องการ Smartwatch (โทร/แจ้งเตือน)</li>
+          <li>นักยกน้ำหนักที่ต้องการ Reps tracking</li>
+          <li>ผู้ใช้งานทั่วไปที่ไม่ต้องการข้อมูลซับซ้อน</li>
+          <li>คนที่ไม่อยากจ่าย subscription รายเดือน</li>
+          <li>ผู้ที่ต้องการ ECG หรือ Medical features</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">07</span>
+      <span class="section-title">สรุปแต่ละสินค้า — เลือกตามการใช้งาน</span>
+    </div>
+    <div class="verdict-grid">
+      <div class="verdict-card">
+        <div class="device-name">WHOOP 4.0 / MG</div>
+        <div class="device-tag">Recovery Specialist</div>
+        <p>ดีที่สุดสำหรับการวัด Recovery และ HRV ใส่สบาย 24/7 ไม่รบกวน ข้อมูลการนอนละเอียดมาก</p>
+        <div class="best-for"><strong>Best for:</strong> นักกีฬาจริงจัง, คนที่ต้องการ Recovery Coach</div>
+      </div>
+      <div class="verdict-card">
+        <div class="device-name">Apple Watch Series 10</div>
+        <div class="device-tag">All-Rounder</div>
+        <p>ครบที่สุดในแง่ Smartwatch + Health tracking ECG, GPS, Notification, Apple ecosystem ครบ</p>
+        <div class="best-for"><strong>Best for:</strong> ผู้ใช้ iPhone ที่ต้องการทุกอย่างในเครื่องเดียว</div>
+      </div>
+      <div class="verdict-card">
+        <div class="device-name">Oura Ring Gen 4</div>
+        <div class="device-tag">Sleep & Wellness</div>
+        <p>ใส่เป็นแหวน ไม่รู้สึกเลย เหมาะมากสำหรับ Sleep tracking และ Readiness Score รายเดือนถูกกว่า WHOOP</p>
+        <div class="best-for"><strong>Best for:</strong> คนที่เน้นการนอน, ผู้ที่ไม่ชอบสวม wristband</div>
+      </div>
+      <div class="verdict-card">
+        <div class="device-name">Garmin Fenix 7 / Forerunner</div>
+        <div class="device-tag">Outdoor & Sports</div>
+        <p>GPS แม่นยำสูง, แบตเตอรีนาน 14–60 วัน, Training Load, VO2 Max ละเอียดมาก เหมาะกับนักวิ่งและ outdoor</p>
+        <div class="best-for"><strong>Best for:</strong> นักวิ่ง, Hiker, นักกีฬา Outdoor</div>
+      </div>
+      <div class="verdict-card">
+        <div class="device-name">Samsung Galaxy Watch 7</div>
+        <div class="device-tag">Android Smartwatch</div>
+        <p>Smartwatch ครบสำหรับ Android, มี BIA body composition, ECG, blood pressure, Galaxy AI features</p>
+        <div class="best-for"><strong>Best for:</strong> ผู้ใช้ Android/Samsung ที่ต้องการ Smartwatch</div>
+      </div>
+      <div class="verdict-card">
+        <div class="device-name">Fitbit Charge 6</div>
+        <div class="device-tag">Budget-Friendly</div>
+        <p>ราคาสมเหตุสมผล, Stress tracking ดี, รวม Google Maps และ Wallet, เข้า Google ecosystem</p>
+        <div class="best-for"><strong>Best for:</strong> ผู้เริ่มต้น, งบจำกัด, ต้องการ Google integration</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="summary-box">
+    <h3>สรุปภาพรวม — ควรเลือก WHOOP ไหม?</h3>
+    <p>
+      <strong>WHOOP คุ้มค่าถ้า</strong> คุณเป็นนักกีฬาที่ฝึกหนักอย่างสม่ำเสมอและต้องการรู้ว่าแต่ละวันร่างกายพร้อมแค่ไหน ข้อมูล Recovery และ HRV ที่แม่นยำของ WHOOP สามารถช่วยป้องกัน overtraining และ Injury ได้จริง รวมถึงการนอนหลับที่ละเอียดมากในระดับที่คู่แข่งน้อยรายทำได้
+      <br><br>
+      <strong>ไม่คุ้มค่าถ้า</strong> คุณต้องการ GPS, Smartwatch features, หรือไม่ต้องการจ่าย subscription รายเดือน ในกรณีนี้ <strong>Garmin</strong> (ถ้าชอบวิ่งนอก), <strong>Apple Watch</strong> (ถ้าใช้ iPhone), หรือ <strong>Oura Ring</strong> (ถ้าเน้นนอน) น่าจะตอบโจทย์กว่า
+      <br><br>
+      <strong>ข้อสรุป:</strong> WHOOP ไม่ใช่สำหรับทุกคน แต่สำหรับนักกีฬาจริงจังที่ต้องการ "โค้ชส่วนตัว" ด้าน Recovery — WHOOP เป็นตัวเลือกอันดับต้นๆ ในตลาดปัจจุบัน
+    </p>
+  </div>
+
+  <div class="footnote">
+    ข้อมูลอ้างอิง: Cybernews, Android Police, Healthline, DC Rainmaker, Live Science, NBC News, Wareable | ราคาและฟีเจอร์อาจเปลี่ยนแปลงได้ตามเวลา<br>
+    จัดทำเพื่อการศึกษาและตัดสินใจเท่านั้น — พฤษภาคม 2026
+  </div>
+
+</div>
+
+</body>
+</html>

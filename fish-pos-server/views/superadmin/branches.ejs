@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>จัดการสาขา — Fish POS</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0a1628; color: #e2e8f0;
+      font-family: 'Segoe UI', 'Noto Sans Thai', sans-serif;
+      min-height: 100vh;
+    }
+    header {
+      background: #0f2044; border-bottom: 1px solid #1e3a5f;
+      padding: 0.9rem 1.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem; flex-wrap: wrap;
+    }
+    .brand { display: flex; align-items: center; gap: 0.6rem; }
+    .brand .fish { font-size: 1.5rem; }
+    .brand h1 { font-size: 1.1rem; font-weight: 700; color: #38bdf8; }
+    nav a {
+      color: #94a3b8; text-decoration: none; font-size: 0.85rem;
+      padding: 0.35rem 0.75rem; border-radius: 6px;
+      transition: background 0.15s, color 0.15s;
+    }
+    nav a:hover, nav a.active { background: #1e3a5f; color: #38bdf8; }
+    .user-chip { display: flex; align-items: center; gap: 0.5rem; }
+    .user-chip .name {
+      font-size: 0.82rem; color: #94a3b8; padding: 0.3rem 0.7rem;
+      background: #1e3a5f; border-radius: 999px;
+    }
+    .logout-link {
+      font-size: 0.82rem; color: #f87171; text-decoration: none;
+      padding: 0.3rem 0.7rem; border: 1px solid rgba(248,113,113,0.3);
+      border-radius: 999px;
+    }
+    .logout-link:hover { background: rgba(248,113,113,0.1); }
+    main { padding: 2rem 1.5rem; max-width: 1100px; margin: 0 auto; }
+    h2 { font-size: 1.2rem; font-weight: 700; color: #e2e8f0; margin-bottom: 1.5rem; }
+    .msg-banner {
+      background: rgba(56,189,248,0.1);
+      border: 1px solid rgba(56,189,248,0.35);
+      color: #7dd3fc; border-radius: 8px;
+      padding: 0.75rem 1rem; margin-bottom: 1.2rem;
+      font-size: 0.88rem; word-break: break-all;
+    }
+    .two-col {
+      display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem;
+    }
+    @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } }
+    .card {
+      background: #0f2044; border: 1px solid #1e3a5f;
+      border-radius: 12px; overflow: hidden;
+    }
+    .card-header {
+      padding: 0.9rem 1rem; border-bottom: 1px solid #1e3a5f;
+      font-size: 0.85rem; font-weight: 600; color: #94a3b8;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    th {
+      padding: 0.6rem 0.8rem; text-align: left;
+      font-size: 0.75rem; color: #64748b; text-transform: uppercase;
+      letter-spacing: 0.5px; font-weight: 600;
+      border-bottom: 1px solid #1e3a5f;
+    }
+    td { padding: 0.7rem 0.8rem; border-bottom: 1px solid rgba(30,58,95,0.5); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(56,189,248,0.03); }
+    .badge {
+      display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px;
+      font-size: 0.75rem; font-weight: 600;
+    }
+    .badge.active { background: rgba(52,211,153,0.15); color: #6ee7b7; border: 1px solid rgba(52,211,153,0.3); }
+    .badge.inactive { background: rgba(248,113,113,0.12); color: #fca5a5; border: 1px solid rgba(248,113,113,0.3); }
+    .btn-sm {
+      display: inline-block; padding: 0.25rem 0.6rem;
+      font-size: 0.78rem; font-weight: 600; border: none;
+      border-radius: 6px; cursor: pointer; text-decoration: none;
+      transition: opacity 0.15s;
+    }
+    .btn-sm:hover { opacity: 0.85; }
+    .btn-toggle { background: #1e3a5f; color: #94a3b8; }
+    .btn-delete { background: rgba(248,113,113,0.15); color: #fca5a5; border: 1px solid rgba(248,113,113,0.3); }
+    .btn-invite { background: rgba(56,189,248,0.15); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); }
+    .form-group { padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+    label { font-size: 0.78rem; color: #64748b; font-weight: 600; margin-bottom: 0.25rem; display: block; }
+    input[type="text"] {
+      width: 100%; background: #0a1628; border: 1px solid #1e3a5f;
+      border-radius: 8px; color: #e2e8f0; font-size: 0.9rem;
+      padding: 0.55rem 0.8rem; outline: none;
+    }
+    input[type="text"]:focus { border-color: #38bdf8; }
+    .btn-primary {
+      padding: 0.6rem 1rem; background: linear-gradient(135deg, #0284c7, #0ea5e9);
+      color: #fff; font-size: 0.9rem; font-weight: 700;
+      border: none; border-radius: 8px; cursor: pointer; width: 100%;
+    }
+    .btn-primary:hover { opacity: 0.92; }
+    select {
+      width: 100%; background: #0a1628; border: 1px solid #1e3a5f;
+      border-radius: 8px; color: #e2e8f0; font-size: 0.9rem;
+      padding: 0.55rem 0.8rem; outline: none;
+    }
+    select:focus { border-color: #38bdf8; }
+    .invite-section {
+      padding: 1rem; border-top: 1px solid #1e3a5f;
+    }
+    .invite-title { font-size: 0.85rem; font-weight: 600; color: #94a3b8; margin-bottom: 0.75rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="fish">🐟</span>
+      <h1>Fish POS</h1>
+    </div>
+    <nav>
+      <a href="/superadmin/dashboard">Dashboard</a>
+      <a href="/superadmin/branches" class="active">สาขา</a>
+      <a href="/superadmin/users">ผู้ใช้</a>
+    </nav>
+    <div class="user-chip">
+      <span class="name">&#11088; <%= session.username %></span>
+      <a href="/logout" class="logout-link">ออกจากระบบ</a>
+    </div>
+  </header>
+
+  <main>
+    <h2>&#127968; จัดการสาขา</h2>
+
+    <% if (message) { %>
+      <div class="msg-banner">&#8505; <%= message %></div>
+    <% } %>
+
+    <div class="two-col">
+      <!-- Branch table -->
+      <div>
+        <div class="card">
+          <div class="card-header">รายการสาขาทั้งหมด (<%= branches.length %> สาขา)</div>
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>ชื่อสาขา</th>
+                <th>ที่ตั้ง</th>
+                <th>สถานะ</th>
+                <th>สร้างเมื่อ</th>
+                <th>การดำเนินการ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (branches.length === 0) { %>
+                <tr>
+                  <td colspan="6" style="text-align:center; color:#475569; padding:2rem;">
+                    ยังไม่มีสาขา
+                  </td>
+                </tr>
+              <% } else { %>
+                <% branches.forEach(function(b, i) { %>
+                  <tr>
+                    <td style="color:#475569"><%= b.id %></td>
+                    <td style="font-weight:600"><%= b.name %></td>
+                    <td style="color:#94a3b8"><%= b.location || '—' %></td>
+                    <td>
+                      <span class="badge <%= b.status %>">
+                        <%= b.status === 'active' ? 'Active' : 'Inactive' %>
+                      </span>
+                    </td>
+                    <td style="color:#64748b; font-size:0.8rem"><%= b.created_at ? b.created_at.slice(0,10) : '—' %></td>
+                    <td>
+                      <form method="POST" action="/superadmin/branches/<%= b.id %>/toggle" style="display:inline">
+                        <button type="submit" class="btn-sm btn-toggle">
+                          <%= b.status === 'active' ? 'ปิด' : 'เปิด' %>
+                        </button>
+                      </form>
+                      <form method="POST" action="/superadmin/branches/<%= b.id %>/delete" style="display:inline"
+                        onsubmit="return confirm('ลบสาขา <%= b.name %>?')">
+                        <button type="submit" class="btn-sm btn-delete">ลบ</button>
+                      </form>
+                    </td>
+                  </tr>
+                <% }); %>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Side panel -->
+      <div style="display:flex; flex-direction:column; gap:1rem;">
+
+        <!-- Add branch form -->
+        <div class="card">
+          <div class="card-header">&#43; เพิ่มสาขาใหม่</div>
+          <form method="POST" action="/superadmin/branches" class="form-group">
+            <div>
+              <label>ชื่อสาขา *</label>
+              <input type="text" name="name" placeholder="เช่น สาขาลาดพร้าว" required>
+            </div>
+            <div>
+              <label>ที่ตั้ง</label>
+              <input type="text" name="location" placeholder="เช่น กรุงเทพ">
+            </div>
+            <button type="submit" class="btn-primary">สร้างสาขา</button>
+          </form>
+        </div>
+
+        <!-- Create invite code -->
+        <div class="card">
+          <div class="card-header">&#128179; สร้างรหัสเชิญ</div>
+          <form method="POST" action="/superadmin/invite" class="form-group">
+            <div>
+              <label>เลือกสาขา</label>
+              <select name="branch_id" required>
+                <option value="">-- เลือกสาขา --</option>
+                <% branches.forEach(function(b) { %>
+                  <option value="<%= b.id %>"><%= b.name %></option>
+                <% }); %>
+              </select>
+            </div>
+            <div>
+              <label>สิทธิ์</label>
+              <select name="role">
+                <option value="manager">Manager (ผู้จัดการ)</option>
+                <option value="staff" selected>Staff (พนักงาน)</option>
+                <option value="cashier">Cashier (แคชเชียร์)</option>
+              </select>
+            </div>
+            <button type="submit" class="btn-primary">สร้างรหัสเชิญ</button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</body>
+</html>
