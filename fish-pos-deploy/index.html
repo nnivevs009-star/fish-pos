@@ -901,14 +901,14 @@ function genSalt() { return ([...crypto.getRandomValues(new Uint8Array(16))]).ma
 
 // --- Storage helpers (localStorage + Supabase settings table) ---
 function getAuthUsers() { try { return JSON.parse(localStorage.getItem('fp_auth_users')||'[]'); } catch { return []; } }
-function saveAuthUsers(u) {
+async function saveAuthUsers(u) {
   localStorage.setItem('fp_auth_users', JSON.stringify(u));
-  sb.from('settings').upsert([{ branch_id: 'global_users', data: u }]).catch(e => console.error('saveAuthUsers:', e));
+  await sb.from('settings').upsert([{ branch_id: 'global_users', data: u }]);
 }
 function getInvCodes() { try { return JSON.parse(localStorage.getItem('fp_inv_codes')||'[]'); } catch { return []; } }
-function saveInvCodes(c) {
+async function saveInvCodes(c) {
   localStorage.setItem('fp_inv_codes', JSON.stringify(c));
-  sb.from('settings').upsert([{ branch_id: 'global_invites', data: c }]).catch(e => console.error('saveInvCodes:', e));
+  await sb.from('settings').upsert([{ branch_id: 'global_invites', data: c }]);
 }
 function getSession() {
   try {
@@ -931,9 +931,9 @@ function clearSession() { localStorage.removeItem('fp_auth_session'); }
 
 // Branch storage
 function getBranches() { try { return JSON.parse(localStorage.getItem('fp_branches')||'[]'); } catch { return []; } }
-function saveBranches(b) {
+async function saveBranches(b) {
   localStorage.setItem('fp_branches', JSON.stringify(b));
-  sb.from('settings').upsert([{ branch_id: 'global_branches', data: b }]).catch(e => console.error('saveBranches:', e));
+  await sb.from('settings').upsert([{ branch_id: 'global_branches', data: b }]);
 }
 
 // Role helpers (treat 'admin' as superadmin for backward compat)
@@ -1294,26 +1294,29 @@ function renderBranchesSection() {
   }).join('');
 }
 
-function doCreateBranch() {
+async function doCreateBranch() {
   if(!isSuperAdmin()) { notify('เฉพาะ Super Admin เท่านั้น','wrn'); return; }
   const name = document.getElementById('new-branch-name').value.trim();
   if(!name) { notify('กรอกชื่อสาขาด้วย','wrn'); return; }
   const loc = document.getElementById('new-branch-loc').value.trim();
-  const branch = {id: Date.now(), name, location:loc, status:'active', createdAt:new Date().toISOString()};
-  saveBranches([...getBranches(), branch]);
+  const id = Date.now();
+  // code คือ Supabase branch_id ที่ใช้เก็บข้อมูลสต๊อก/ขาย ให้ manager ใส่ค่านี้ตอน login ครั้งแรก
+  const code = String(id);
+  const branch = {id, code, name, location:loc, status:'active', createdAt:new Date().toISOString()};
+  await saveBranches([...getBranches(), branch]);
   document.getElementById('new-branch-name').value='';
   document.getElementById('new-branch-loc').value='';
   renderBranchesSection();
-  notify(`สร้างสาขา "${name}" แล้ว ✅`);
+  notify(`สร้างสาขา "${name}" แล้ว ✅ (รหัสสาขา: ${code})`);
 }
 
-function doToggleBranch(branchId) {
+async function doToggleBranch(branchId) {
   if(!isSuperAdmin()) return;
   const branches = getBranches();
   const idx = branches.findIndex(b=>b.id===branchId);
   if(idx<0) return;
   branches[idx].status = branches[idx].status==='active' ? 'inactive' : 'active';
-  saveBranches(branches);
+  await saveBranches(branches);
   renderBranchesSection();
 }
 
@@ -1344,18 +1347,29 @@ async function confirmDeleteBranch() {
   if(!me) { errEl.textContent = 'ไม่พบข้อมูลผู้ใช้'; return; }
   const hash = await hashPwd(p1, me.salt);
   if(hash !== me.passwordHash) { errEl.textContent = 'รหัสผ่านไม่ถูกต้อง'; return; }
-  // Delete branch, its users, and all branch data from localStorage
+  // Delete branch, its users, and all branch data
   const branchId = _deletingBranchId;
   const branch = getBranches().find(b=>b.id===branchId);
-  // Remove users in this branch
-  saveAuthUsers(getAuthUsers().filter(u=>u.branchId!==branchId));
-  // Remove all branch-scoped localStorage keys
-  const pfx = `_b${branchId}`;
-  ['_products','_lots','_transactions','_movements','_settings','_held'].forEach(k=>{
-    localStorage.removeItem(`fp${pfx}${k}`);
-  });
-  // Remove branch record
-  saveBranches(getBranches().filter(b=>b.id!==branchId));
+  // sbId คือ branch_id ที่ใช้ใน Supabase (code เก็บตอนสร้างสาขา, fallback เป็น String(id))
+  const sbId = branch && branch.code ? branch.code : String(branchId);
+
+  // ลบข้อมูลจาก Supabase ทุกตาราง
+  try {
+    await Promise.all([
+      sb.from('products').delete().eq('branch_id', sbId),
+      sb.from('lots').delete().eq('branch_id', sbId),
+      sb.from('transactions').delete().eq('branch_id', sbId),
+      sb.from('movements').delete().eq('branch_id', sbId),
+      sb.from('settings').delete().eq('branch_id', sbId),
+    ]);
+  } catch(e) {
+    console.error('Delete branch Supabase error:', e);
+  }
+
+  // ลบผู้ใช้ในสาขานี้
+  await saveAuthUsers(getAuthUsers().filter(u=>u.branchId!==branchId));
+  // ลบ branch record
+  await saveBranches(getBranches().filter(b=>b.id!==branchId));
   closeModal('del-branch-modal');
   _deletingBranchId = null;
   renderBranchesSection();
@@ -1373,7 +1387,7 @@ function closeEditBranch(branchId) {
   document.getElementById('bc-view-'+branchId).style.display = '';
 }
 
-function doSaveBranch(branchId) {
+async function doSaveBranch(branchId) {
   if(!isSuperAdmin()) return;
   const name = document.getElementById('bc-name-'+branchId).value.trim();
   if(!name) { notify('กรอกชื่อสาขาด้วย','wrn'); return; }
@@ -1383,23 +1397,25 @@ function doSaveBranch(branchId) {
   if(idx<0) return;
   branches[idx].name = name;
   branches[idx].location = loc;
-  saveBranches(branches);
+  await saveBranches(branches);
   renderBranchesSection();
   notify(`บันทึกข้อมูลสาขา "${name}" แล้ว ✅`);
 }
 
-function doGenBranchCode(branchId) {
+async function doGenBranchCode(branchId) {
   if(!isSuperAdmin()) return;
   const branch = getBranches().find(b=>b.id===branchId);
   if(!branch) return;
   const role = 'manager';
   const code = [...crypto.getRandomValues(new Uint8Array(6))].map(b=>b.toString(16).padStart(2,'0')).join('').toUpperCase();
   const inv = {id:'ic'+Date.now(), code, role, branchId,
+    // sbBranchId คือ branch_id ที่ Supabase ใช้ ให้ manager กรอกตอน login ครั้งแรก
+    sbBranchId: branch.code || String(branchId),
     createdBy:currentSession.userId,
     createdAt:new Date().toISOString(),
     expiresAt:new Date(Date.now()+48*60*60*1000).toISOString(),
     usedBy:null, usedAt:null};
-  saveInvCodes([...getInvCodes(), inv]);
+  await saveInvCodes([...getInvCodes(), inv]);
   const link = `${location.href.split('#')[0]}#invite=${code}`;
   navigator.clipboard.writeText(link).catch(()=>{});
   notify(`รหัสเชิญ Manager สาขา "${branch.name}": ${code} (Copy แล้ว)`);
