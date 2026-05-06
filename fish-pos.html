@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fish POS — ระบบขายปลาแช่แข็ง</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root[data-theme="dark"]{--bg:#071426;--bg2:#0c1e38;--bg3:#112650;--sf:#162d55;--sf2:#1c3665;--bd:#234072;--tx:#dbeafe;--tx2:#93c5fd;--tx3:#60a5fa;--ac:#0ea5e9;--ac2:#06b6d4;--ok:#10b981;--warn:#f59e0b;--err:#ef4444;--sh:rgba(0,0,0,.55)}
 :root[data-theme="light"]{--bg:#f0f9ff;--bg2:#e0f2fe;--bg3:#bae6fd;--sf:#fff;--sf2:#f8fafc;--bd:#bae6fd;--tx:#0f172a;--tx2:#1e40af;--tx3:#0369a1;--ac:#0284c7;--ac2:#0891b2;--ok:#059669;--warn:#d97706;--err:#dc2626;--sh:rgba(0,0,0,.12)}
@@ -1673,32 +1674,75 @@ let heldBills = [];
 let customerName = '';
 
 // ============================================================
+// SUPABASE SETUP
+// ============================================================
+const SUPABASE_URL = 'https://jywyfmohbosiebqngmjs.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_Zm3Nd7wcGF-iwf1n3KrEZQ_3xorryRx';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ============================================================
 // STORAGE
 // ============================================================
-function save() {
-  const pfx = bpfx();
-  ls(`fp${pfx}_products`, products);
-  ls(`fp${pfx}_lots`, lots);
-  ls(`fp${pfx}_transactions`, transactions);
-  ls(`fp${pfx}_movements`, movements);
-  ls(`fp${pfx}_settings`, settings);
-  ls(`fp${pfx}_held`, heldBills);
-}
 function ls(k, v) { if(v===undefined) return JSON.parse(localStorage.getItem(k)||'null'); localStorage.setItem(k, JSON.stringify(v)); }
 
-function load() {
-  const pfx = bpfx();
-  // Branch users start completely empty; superadmin gets demo data if nothing saved yet
-  products = ls(`fp${pfx}_products`) || (pfx ? [] : JSON.parse(JSON.stringify(INIT_PRODUCTS)));
-  const l = ls(`fp${pfx}_lots`);
-  lots = l !== null ? l : (pfx ? [] : JSON.parse(JSON.stringify(INIT_LOTS)));
-  transactions = ls(`fp${pfx}_transactions`) || [];
-  movements = ls(`fp${pfx}_movements`) || [];
-  settings = ls(`fp${pfx}_settings`) || { shopName:'Fish POS', lowAlert:30, vatRate:7 };
-  heldBills = ls(`fp${pfx}_held`) || [];
+function getBranchId() {
+  return localStorage.getItem('fp_branch_id') || 'main';
+}
+
+async function save() {
+  const branch_id = getBranchId();
+  try {
+    if (products.length > 0) {
+      await sb.from('products').upsert(products.map(p => ({ id: p.id, data: p, branch_id })));
+    }
+    if (lots.length > 0) {
+      await sb.from('lots').upsert(lots.map(l => ({ id: l.id, data: l, branch_id })));
+    }
+    if (transactions.length > 0) {
+      await sb.from('transactions').upsert(transactions.map(t => ({ id: t.id, data: t, branch_id })));
+    }
+    if (movements.length > 0) {
+      await sb.from('movements').upsert(movements.map(m => ({ id: m.id, data: m, branch_id })));
+    }
+    await sb.from('settings').upsert([{ branch_id, data: settings }]);
+    // held bills ยังเก็บใน localStorage เพราะเป็นข้อมูลชั่วคราว
+    localStorage.setItem('fp_held', JSON.stringify(heldBills));
+  } catch(e) {
+    console.error('Save error:', e);
+  }
+}
+
+async function load() {
+  const branch_id = getBranchId();
   curLang = localStorage.getItem('fp_lang') || 'th';
   curTheme = localStorage.getItem('fp_theme') || 'dark';
   vatOn = localStorage.getItem('fp_vat') === '1';
+  heldBills = JSON.parse(localStorage.getItem('fp_held') || '[]');
+  try {
+    const [p, l, t, m, s] = await Promise.all([
+      sb.from('products').select('data').eq('branch_id', branch_id),
+      sb.from('lots').select('data').eq('branch_id', branch_id),
+      sb.from('transactions').select('data').eq('branch_id', branch_id),
+      sb.from('movements').select('data').eq('branch_id', branch_id),
+      sb.from('settings').select('data').eq('branch_id', branch_id),
+    ]);
+    products     = (p.data||[]).map(r=>r.data);
+    lots         = (l.data||[]).map(r=>r.data);
+    transactions = (t.data||[]).map(r=>r.data);
+    movements    = (m.data||[]).map(r=>r.data);
+    settings     = s.data && s.data.length > 0 ? s.data[0].data : { shopName:'Fish POS', lowAlert:30, vatRate:7 };
+    // โหลด demo data ถ้ายังไม่มีข้อมูลใน DB (สำหรับ main branch)
+    if (products.length === 0 && branch_id === 'main') {
+      products = JSON.parse(JSON.stringify(INIT_PRODUCTS));
+      lots = JSON.parse(JSON.stringify(INIT_LOTS));
+    }
+  } catch(e) {
+    console.error('Load error:', e);
+    products = JSON.parse(JSON.stringify(INIT_PRODUCTS));
+    lots = JSON.parse(JSON.stringify(INIT_LOTS));
+    transactions = []; movements = [];
+    settings = { shopName:'Fish POS', lowAlert:30, vatRate:7 };
+  }
 }
 
 
@@ -2974,22 +3018,20 @@ function renderAll() {
 // ============================================================
 // INIT
 // ============================================================
-load();
-applyThemeLang();
-fillCatSelects();
-renderAll();
-renderHeldBills();
-document.getElementById('in-date').value = today();
-updateHomeBadge();
-// Start auth check — shows login overlay if not authenticated
-initAuth();
-
-// Low stock on stock page open handled by goPage
-// init stock alerts
-setTimeout(()=>{
-  const lowCnt = products.filter(p=>getStock(p.id)<=(p.low||30)).length;
-  if(lowCnt>0) document.getElementById('nav-stock').title=`⚠️ ${lowCnt} รายการสต๊อกต่ำ`;
-},100);
+(async () => {
+  await load();
+  applyThemeLang();
+  fillCatSelects();
+  renderAll();
+  renderHeldBills();
+  document.getElementById('in-date').value = today();
+  updateHomeBadge();
+  initAuth();
+  setTimeout(()=>{
+    const lowCnt = products.filter(p=>getStock(p.id)<=(p.low||30)).length;
+    if(lowCnt>0) document.getElementById('nav-stock').title=`⚠️ ${lowCnt} รายการสต๊อกต่ำ`;
+  },100);
+})();
 
 // ============================================================
 // NAVIGATION (full)
