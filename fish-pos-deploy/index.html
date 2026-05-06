@@ -1763,11 +1763,12 @@ async function load() {
     transactions = (t.data||[]).map(r=>r.data);
     movements    = (m.data||[]).map(r=>r.data);
     settings     = s.data && s.data.length > 0 ? s.data[0].data : { shopName:'Fish POS', lowAlert:30, vatRate:7 };
-    // เฉพาะ branch_id 'main' เท่านั้นที่ได้รับ demo data ตอนเปิดใช้ครั้งแรก
-    // สาขาอื่น ๆ เริ่มต้นด้วยสต๊อกว่างเปล่าเสมอ
-    if (products.length === 0 && branch_id === 'main') {
+    // seed demo data เฉพาะ main branch และเฉพาะครั้งแรกที่ใช้งาน (flag fp_main_seeded ยังไม่ถูกตั้ง)
+    // ถ้า flag ถูกตั้งแล้ว หรือเป็นสาขาอื่น → products = [] ตามปกติ
+    if (products.length === 0 && branch_id === 'main' && !localStorage.getItem('fp_main_seeded')) {
       products = JSON.parse(JSON.stringify(INIT_PRODUCTS));
       lots     = JSON.parse(JSON.stringify(INIT_LOTS));
+      localStorage.setItem('fp_main_seeded', '1');
     }
     // อัปเดต global data ลง localStorage เพื่อให้ getAuthUsers/getBranches/getInvCodes อ่านได้ทันที
     if (gu.data && gu.data.length > 0) localStorage.setItem('fp_auth_users', JSON.stringify(gu.data[0].data));
@@ -1775,13 +1776,8 @@ async function load() {
     if (gi.data && gi.data.length > 0) localStorage.setItem('fp_inv_codes', JSON.stringify(gi.data[0].data));
   } catch(e) {
     console.error('Load error:', e);
-    // fallback offline: main branch ได้ demo data, สาขาอื่นได้ข้อมูลว่าง
-    if (branch_id === 'main') {
-      products = JSON.parse(JSON.stringify(INIT_PRODUCTS));
-      lots     = JSON.parse(JSON.stringify(INIT_LOTS));
-    } else {
-      products = []; lots = [];
-    }
+    // fallback เมื่อ Supabase ใช้ไม่ได้ → ข้อมูลว่างทุกสาขา (ไม่ seed demo เพื่อไม่ให้ข้อมูลผิด)
+    products = []; lots = [];
     transactions = []; movements = [];
     settings = { shopName:'Fish POS', lowAlert:30, vatRate:7 };
   }
@@ -3074,14 +3070,6 @@ function renderAll() {
     const lowCnt = products.filter(p=>getStock(p.id)<=(p.low||30)).length;
     if(lowCnt>0) document.getElementById('nav-stock').title=`⚠️ ${lowCnt} รายการสต๊อกต่ำ`;
   },100);
-
-  // Auto-refresh ข้อมูลจาก Supabase ทุก 30 วินาที
-  setInterval(async () => {
-    await load();
-    renderAll();
-    try { renderProducts(); } catch(e) {}
-    try { renderStock(); } catch(e) {}
-  }, 30000);
 })();
 
 // ============================================================
