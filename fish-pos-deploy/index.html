@@ -1763,10 +1763,11 @@ async function load() {
     transactions = (t.data||[]).map(r=>r.data);
     movements    = (m.data||[]).map(r=>r.data);
     settings     = s.data && s.data.length > 0 ? s.data[0].data : { shopName:'Fish POS', lowAlert:30, vatRate:7 };
-    // โหลด demo data ถ้ายังไม่มีข้อมูลใน DB (สำหรับ main branch)
+    // เฉพาะ branch_id 'main' เท่านั้นที่ได้รับ demo data ตอนเปิดใช้ครั้งแรก
+    // สาขาอื่น ๆ เริ่มต้นด้วยสต๊อกว่างเปล่าเสมอ
     if (products.length === 0 && branch_id === 'main') {
       products = JSON.parse(JSON.stringify(INIT_PRODUCTS));
-      lots = JSON.parse(JSON.stringify(INIT_LOTS));
+      lots     = JSON.parse(JSON.stringify(INIT_LOTS));
     }
     // อัปเดต global data ลง localStorage เพื่อให้ getAuthUsers/getBranches/getInvCodes อ่านได้ทันที
     if (gu.data && gu.data.length > 0) localStorage.setItem('fp_auth_users', JSON.stringify(gu.data[0].data));
@@ -1774,8 +1775,13 @@ async function load() {
     if (gi.data && gi.data.length > 0) localStorage.setItem('fp_inv_codes', JSON.stringify(gi.data[0].data));
   } catch(e) {
     console.error('Load error:', e);
-    products = JSON.parse(JSON.stringify(INIT_PRODUCTS));
-    lots = JSON.parse(JSON.stringify(INIT_LOTS));
+    // fallback offline: main branch ได้ demo data, สาขาอื่นได้ข้อมูลว่าง
+    if (branch_id === 'main') {
+      products = JSON.parse(JSON.stringify(INIT_PRODUCTS));
+      lots     = JSON.parse(JSON.stringify(INIT_LOTS));
+    } else {
+      products = []; lots = [];
+    }
     transactions = []; movements = [];
     settings = { shopName:'Fish POS', lowAlert:30, vatRate:7 };
   }
