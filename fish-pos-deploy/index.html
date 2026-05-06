@@ -899,11 +899,17 @@ async function sha256hex(str) {
 async function hashPwd(password, salt) { return sha256hex(salt + ':' + password); }
 function genSalt() { return ([...crypto.getRandomValues(new Uint8Array(16))]).map(b=>b.toString(16).padStart(2,'0')).join(''); }
 
-// --- Storage helpers ---
+// --- Storage helpers (localStorage + Supabase settings table) ---
 function getAuthUsers() { try { return JSON.parse(localStorage.getItem('fp_auth_users')||'[]'); } catch { return []; } }
-function saveAuthUsers(u) { localStorage.setItem('fp_auth_users', JSON.stringify(u)); }
+function saveAuthUsers(u) {
+  localStorage.setItem('fp_auth_users', JSON.stringify(u));
+  sb.from('settings').upsert([{ branch_id: 'global_users', data: u }]).catch(e => console.error('saveAuthUsers:', e));
+}
 function getInvCodes() { try { return JSON.parse(localStorage.getItem('fp_inv_codes')||'[]'); } catch { return []; } }
-function saveInvCodes(c) { localStorage.setItem('fp_inv_codes', JSON.stringify(c)); }
+function saveInvCodes(c) {
+  localStorage.setItem('fp_inv_codes', JSON.stringify(c));
+  sb.from('settings').upsert([{ branch_id: 'global_invites', data: c }]).catch(e => console.error('saveInvCodes:', e));
+}
 function getSession() {
   try {
     const s = JSON.parse(localStorage.getItem('fp_auth_session')||'null');
@@ -925,7 +931,10 @@ function clearSession() { localStorage.removeItem('fp_auth_session'); }
 
 // Branch storage
 function getBranches() { try { return JSON.parse(localStorage.getItem('fp_branches')||'[]'); } catch { return []; } }
-function saveBranches(b) { localStorage.setItem('fp_branches', JSON.stringify(b)); }
+function saveBranches(b) {
+  localStorage.setItem('fp_branches', JSON.stringify(b));
+  sb.from('settings').upsert([{ branch_id: 'global_branches', data: b }]).catch(e => console.error('saveBranches:', e));
+}
 
 // Role helpers (treat 'admin' as superadmin for backward compat)
 function isSuperAdmin() { return currentSession && (currentSession.role==='admin'||currentSession.role==='superadmin') && !currentSession.branchId; }
@@ -1739,12 +1748,15 @@ async function load() {
   vatOn = localStorage.getItem('fp_vat') === '1';
   heldBills = JSON.parse(localStorage.getItem('fp_held') || '[]');
   try {
-    const [p, l, t, m, s] = await Promise.all([
+    const [p, l, t, m, s, gu, gb, gi] = await Promise.all([
       sb.from('products').select('data').eq('branch_id', branch_id),
       sb.from('lots').select('data').eq('branch_id', branch_id),
       sb.from('transactions').select('data').eq('branch_id', branch_id),
       sb.from('movements').select('data').eq('branch_id', branch_id),
       sb.from('settings').select('data').eq('branch_id', branch_id),
+      sb.from('settings').select('data').eq('branch_id', 'global_users'),
+      sb.from('settings').select('data').eq('branch_id', 'global_branches'),
+      sb.from('settings').select('data').eq('branch_id', 'global_invites'),
     ]);
     products     = (p.data||[]).map(r=>r.data);
     lots         = (l.data||[]).map(r=>r.data);
@@ -1756,6 +1768,10 @@ async function load() {
       products = JSON.parse(JSON.stringify(INIT_PRODUCTS));
       lots = JSON.parse(JSON.stringify(INIT_LOTS));
     }
+    // อัปเดต global data ลง localStorage เพื่อให้ getAuthUsers/getBranches/getInvCodes อ่านได้ทันที
+    if (gu.data && gu.data.length > 0) localStorage.setItem('fp_auth_users', JSON.stringify(gu.data[0].data));
+    if (gb.data && gb.data.length > 0) localStorage.setItem('fp_branches', JSON.stringify(gb.data[0].data));
+    if (gi.data && gi.data.length > 0) localStorage.setItem('fp_inv_codes', JSON.stringify(gi.data[0].data));
   } catch(e) {
     console.error('Load error:', e);
     products = JSON.parse(JSON.stringify(INIT_PRODUCTS));
