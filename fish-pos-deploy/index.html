@@ -1779,13 +1779,7 @@ async function load() {
     transactions = (t.data||[]).map(r=>r.data);
     movements    = (m.data||[]).map(r=>r.data);
     settings     = s.data && s.data.length > 0 ? s.data[0].data : { shopName:'Fish POS', lowAlert:30, vatRate:7 };
-    // seed demo data เฉพาะ main branch และเฉพาะครั้งแรกที่ใช้งาน (flag fp_main_seeded ยังไม่ถูกตั้ง)
-    // ถ้า flag ถูกตั้งแล้ว หรือเป็นสาขาอื่น → products = [] ตามปกติ
-    if (products.length === 0 && branch_id === 'main' && !localStorage.getItem('fp_main_seeded')) {
-      products = JSON.parse(JSON.stringify(INIT_PRODUCTS));
-      lots     = JSON.parse(JSON.stringify(INIT_LOTS));
-      localStorage.setItem('fp_main_seeded', '1');
-    }
+    // ทุกสาขา (รวมถึง main) ถ้าไม่มีข้อมูลใน Supabase → เริ่มต้นว่างเปล่า
     // อัปเดต global data ลง localStorage เพื่อให้ getAuthUsers/getBranches/getInvCodes อ่านได้ทันที
     if (gu.data && gu.data.length > 0) localStorage.setItem('fp_auth_users', JSON.stringify(gu.data[0].data));
     if (gb.data && gb.data.length > 0) localStorage.setItem('fp_branches', JSON.stringify(gb.data[0].data));
