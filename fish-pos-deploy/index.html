@@ -1004,8 +1004,8 @@ async function doLogin() {
   setSession(user);
   currentSession = getSession();
   document.getElementById('auth-overlay').style.display = 'none';
-  load(); renderAll(); renderHeldBills();
-  showUserInfo();
+  await load(); renderAll(); renderHeldBills();
+  showUserInfo(); showBranchChip();
   btn.disabled=false; btn.textContent='เข้าสู่ระบบ';
 }
 
@@ -1029,8 +1029,8 @@ async function doSetup() {
   setSession(newUser);
   currentSession = {userId:newUser.id, username:newUser.username, role:newUser.role};
   document.getElementById('auth-overlay').style.display='none';
-  load(); renderAll(); renderHeldBills();
-  showUserInfo();
+  await load(); renderAll(); renderHeldBills();
+  showUserInfo(); showBranchChip();
 }
 
 // --- Register via invite ---
@@ -1056,8 +1056,8 @@ async function doRegister() {
   currentSession = getSession();
   window.location.hash = '';
   document.getElementById('auth-overlay').style.display='none';
-  load(); renderAll(); renderHeldBills();
-  showUserInfo();
+  await load(); renderAll(); renderHeldBills();
+  showUserInfo(); showBranchChip();
 }
 
 // --- Invite code helpers ---
@@ -1094,8 +1094,9 @@ async function initAuth() {
   if(session) {
     currentSession = session;
     document.getElementById('auth-overlay').style.display='none';
-    load(); renderAll(); renderHeldBills();
+    await load(); renderAll(); renderHeldBills();
     showUserInfo();
+    showBranchChip();
     return;
   }
   // Ensure default admin exists (marked isDefault so it gets removed when real account is created)
@@ -1713,17 +1714,22 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 function ls(k, v) { if(v===undefined) return JSON.parse(localStorage.getItem(k)||'null'); localStorage.setItem(k, JSON.stringify(v)); }
 
 function getBranchId() {
-  let bid = localStorage.getItem('fp_branch_id');
-  if (!bid) {
-    bid = (prompt('กรุณาใส่รหัสสาขาของคุณ (เช่น main, branch1, branch2)') || '').trim();
-    if (!bid) bid = 'main';
-    localStorage.setItem('fp_branch_id', bid);
+  // ถ้า login เป็น branch user → ใช้ branch.code ของสาขานั้น (Supabase key)
+  if (currentSession && currentSession.branchId) {
+    const branch = getBranches().find(b => b.id === currentSession.branchId);
+    return branch && branch.code ? branch.code : String(currentSession.branchId);
   }
-  return bid;
+  // superadmin กำลังดูสาขาใดสาขาหนึ่ง
+  if (adminViewBranchId) {
+    const branch = getBranches().find(b => b.id === adminViewBranchId);
+    return branch && branch.code ? branch.code : String(adminViewBranchId);
+  }
+  // superadmin / ยังไม่ได้ login → ใช้ fp_branch_id ใน localStorage (default: 'main')
+  return localStorage.getItem('fp_branch_id') || 'main';
 }
 
 function showBranchChip() {
-  const bid = localStorage.getItem('fp_branch_id') || 'main';
+  const bid = getBranchId();
   let chip = document.getElementById('branch-id-chip');
   if (!chip) {
     chip = document.createElement('div');
@@ -1853,12 +1859,12 @@ function initRepBranchBar() {
   updateRepBranchLabel();
 }
 
-function switchRepBranch(val) {
+async function switchRepBranch(val) {
   adminViewBranchId = val ? parseInt(val) : null;
   // Also sync the stock bar selector if visible
   const stSel = document.getElementById('stk-branch-sel');
   if (stSel) stSel.value = val;
-  load();
+  await load();
   updateRepBranchLabel();
   updateBranchViewChip();
   renderReport(repTab);
@@ -1889,13 +1895,13 @@ function initSetBranchBar() {
   }
 }
 
-function switchSetBranch(val) {
+async function switchSetBranch(val) {
   adminViewBranchId = val ? parseInt(val) : null;
   const stSel = document.getElementById('stk-branch-sel');
   if (stSel) stSel.value = val;
   const repSel = document.getElementById('rep-branch-sel');
   if (repSel) repSel.value = val;
-  load();
+  await load();
   loadSettingsForm();
   updateBranchViewChip();
   initSetBranchBar();
@@ -2683,13 +2689,13 @@ function renderAllBranchSummary() {
     </div>`;
 }
 
-function selectBranchView(branchId) {
+async function selectBranchView(branchId) {
   adminViewBranchId = branchId;
   const repSel = document.getElementById('rep-branch-sel');
   if (repSel) repSel.value = branchId;
   const stSel = document.getElementById('stk-branch-sel');
   if (stSel) stSel.value = branchId;
-  load();
+  await load();
   updateBranchViewChip();
   updateRepBranchLabel();
   // Switch to "today" tab to show this branch's data
