@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fish POS — ระบบขายปลาแช่แข็ง</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <style>
 :root[data-theme="dark"]{--bg:#071426;--bg2:#0c1e38;--bg3:#112650;--sf:#162d55;--sf2:#1c3665;--bd:#234072;--tx:#dbeafe;--tx2:#93c5fd;--tx3:#60a5fa;--ac:#0ea5e9;--ac2:#06b6d4;--ok:#10b981;--warn:#f59e0b;--err:#ef4444;--sh:rgba(0,0,0,.55)}
 :root[data-theme="light"]{--bg:#f0f9ff;--bg2:#e0f2fe;--bg3:#bae6fd;--sf:#fff;--sf2:#f8fafc;--bd:#bae6fd;--tx:#0f172a;--tx2:#1e40af;--tx3:#0369a1;--ac:#0284c7;--ac2:#0891b2;--ok:#059669;--warn:#d97706;--err:#dc2626;--sh:rgba(0,0,0,.12)}
@@ -2423,6 +2424,14 @@ function renderToday() {
   const cost = todayTx.reduce((a,t)=>a+t.items.reduce((s,i)=>s+i.cost*i.qty,0),0);
   const profit = revenue-cost;
   const totalBoxes = todayTx.reduce((a,t)=>a+t.items.reduce((s,i)=>s+i.qty,0),0);
+
+  const summary = {};
+  todayTx.forEach(t=>t.items.forEach(i=>{
+    if(!summary[i.name]) summary[i.name]={name:i.name,qty:0};
+    summary[i.name].qty+=i.qty;
+  }));
+  const summaryRows = Object.values(summary).sort((a,b)=>b.qty-a.qty);
+
   document.getElementById('rep-today').innerHTML = `
     <div class="rep-grid">
       <div class="stat-card"><div class="sv">${todayTx.length}</div><div class="sl">รายการขายวันนี้</div></div>
@@ -2430,8 +2439,75 @@ function renderToday() {
       <div class="stat-card"><div class="sv">${fmtN(totalBoxes)}</div><div class="sl">กล่องที่ขาย</div></div>
       <div class="stat-card"><div class="sv" style="color:var(--ok)">${fmt(profit)}</div><div class="sl">กำไรประมาณ</div></div>
     </div>
-    ${todayTx.length?`<div class="rep-section"><div class="card-hd">รายการขายวันนี้</div><div class="tbl-wrap"><table class="stbl"><thead><tr><th>เวลา</th><th>รายการ</th><th>กล่อง</th><th>ยอดสุทธิ</th><th>หมายเหตุ</th></tr></thead><tbody>${todayTx.map(t=>`<tr><td>${t.id}</td><td>${t.items.map(i=>i.name+'x'+i.qty).join(', ')}</td><td>${t.items.reduce((a,i)=>a+i.qty,0)}</td><td>${fmt(t.total)}</td><td>${t.note||''}</td></tr>`).join('')}</tbody></table></div></div>`
+    ${todayTx.length?`
+    <div class="rep-section">
+      <div class="card-hd" style="justify-content:space-between">
+        <span>รายการขายวันนี้</span>
+        <button class="btn btn-s" style="font-size:12px;padding:4px 10px" onclick="exportDailyExcel('${dt}')">📥 บันทึก Excel</button>
+      </div>
+      <div class="tbl-wrap"><table class="stbl"><thead><tr><th>เลขที่บิล</th><th>รายการ</th><th>กล่อง</th><th>ยอดสุทธิ</th><th>หมายเหตุ</th></tr></thead>
+      <tbody>${todayTx.map(t=>`<tr><td style="font-size:10px">${t.id}</td><td>${t.items.map(i=>i.name+'×'+i.qty).join(', ')}</td><td>${t.items.reduce((a,i)=>a+i.qty,0)}</td><td>${fmt(t.total)}</td><td>${t.note||''}</td></tr>`).join('')}</tbody>
+      </table></div>
+    </div>
+    <div class="rep-section">
+      <div class="card-hd" style="justify-content:space-between"><span>📦 สรุปยอดสินค้าวันนี้</span><button class="btn btn-s" style="font-size:12px;padding:4px 10px" onclick="exportSummaryExcel('${dt}')">📥 บันทึก Excel</button></div>
+      <div class="tbl-wrap"><table class="stbl"><thead><tr><th>สินค้า</th><th style="text-align:right">จำนวนรวม</th><th>หน่วย</th></tr></thead>
+      <tbody>${summaryRows.map(r=>`<tr><td>${r.name}</td><td style="text-align:right;font-weight:600">${fmtN(r.qty)}</td><td>กล่อง</td></tr>`).join('')}</tbody>
+      </table></div>
+    </div>`
     :'<div class="empty"><div class="ico">📊</div><div>ยังไม่มีการขายวันนี้</div></div>'}`;
+}
+
+function exportDailyExcel(dt) {
+  if(!window.XLSX){alert('กำลังโหลด SheetJS กรุณาลองอีกครั้ง');return;}
+  const txList = transactions.filter(t=>t.date===dt);
+  const wb = XLSX.utils.book_new();
+
+  const s1=[['เลขที่บิล','รายการสินค้า','จำนวน','ราคา/หน่วย','รวม','ยอดสุทธิ(บิล)','หมายเหตุ']];
+  txList.forEach(t=>{
+    t.items.forEach((i,idx)=>{
+      s1.push([
+        idx===0?t.id:'',
+        i.name,
+        i.qty,
+        i.price,
+        i.price*i.qty,
+        idx===0?t.total:'',
+        idx===0?(t.note||''):''
+      ]);
+    });
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s1),'รายการขาย');
+
+  const summary={};
+  txList.forEach(t=>t.items.forEach(i=>{
+    if(!summary[i.name]) summary[i.name]={name:i.name,qty:0};
+    summary[i.name].qty+=i.qty;
+  }));
+  const s2=[['ชื่อสินค้า','จำนวนรวม','หน่วย']];
+  Object.values(summary).sort((a,b)=>b.qty-a.qty).forEach(r=>{
+    s2.push([r.name,r.qty,'กล่อง']);
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s2),'สรุปสินค้า');
+
+  XLSX.writeFile(wb,`รายงาน-${dt}.xlsx`);
+}
+
+function exportSummaryExcel(dt) {
+  if(!window.XLSX){alert('กำลังโหลด SheetJS กรุณาลองอีกครั้ง');return;}
+  const txList = transactions.filter(t=>t.date===dt);
+  const summary={};
+  txList.forEach(t=>t.items.forEach(i=>{
+    if(!summary[i.name]) summary[i.name]={name:i.name,qty:0};
+    summary[i.name].qty+=i.qty;
+  }));
+  const s1=[['ชื่อสินค้า','จำนวนรวม','หน่วย']];
+  Object.values(summary).sort((a,b)=>b.qty-a.qty).forEach(r=>{
+    s1.push([r.name,r.qty,'กล่อง']);
+  });
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s1),'สรุปสินค้า');
+  XLSX.writeFile(wb,`สรุปสินค้า-${dt}.xlsx`);
 }
 
 function renderMonthly() {
