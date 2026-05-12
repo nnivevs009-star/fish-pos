@@ -2427,10 +2427,12 @@ function renderToday() {
 
   const summary = {};
   todayTx.forEach(t=>t.items.forEach(i=>{
-    if(!summary[i.name]) summary[i.name]={name:i.name,qty:0};
+    if(!summary[i.name]) summary[i.name]={name:i.name,qty:0,revenue:0};
     summary[i.name].qty+=i.qty;
+    summary[i.name].revenue+=i.price*i.qty;
   }));
   const summaryRows = Object.values(summary).sort((a,b)=>b.qty-a.qty);
+  const summaryTotal = summaryRows.reduce((a,r)=>a+r.revenue,0);
 
   document.getElementById('rep-today').innerHTML = `
     <div class="rep-grid">
@@ -2451,9 +2453,10 @@ function renderToday() {
     </div>
     <div class="rep-section">
       <div class="card-hd" style="justify-content:space-between"><span>📦 สรุปยอดสินค้าวันนี้</span><button class="btn btn-s" style="font-size:12px;padding:4px 10px" onclick="exportSummaryExcel('${dt}')">📥 บันทึก Excel</button></div>
-      <div class="tbl-wrap"><table class="stbl"><thead><tr><th>สินค้า</th><th style="text-align:right">จำนวนรวม</th><th>หน่วย</th></tr></thead>
-      <tbody>${summaryRows.map(r=>`<tr><td>${r.name}</td><td style="text-align:right;font-weight:600">${fmtN(r.qty)}</td><td>กล่อง</td></tr>`).join('')}</tbody>
-      </table></div>
+      <div class="tbl-wrap"><table class="stbl"><thead><tr><th>สินค้า</th><th style="text-align:right">จำนวนรวม</th><th>หน่วย</th><th style="text-align:right">ราคา/หน่วย</th><th style="text-align:right">ยอดรวม</th></tr></thead>
+      <tbody>${summaryRows.map(r=>`<tr><td>${r.name}</td><td style="text-align:right;font-weight:600">${fmtN(r.qty)}</td><td>กล่อง</td><td style="text-align:right;color:var(--tx2)">${fmt(r.revenue/r.qty)}</td><td style="text-align:right;font-weight:600;color:var(--ac)">${fmt(r.revenue)}</td></tr>`).join('')}
+      <tr style="border-top:2px solid var(--bd);font-weight:700"><td>รวมทั้งหมด</td><td style="text-align:right">${fmtN(summaryRows.reduce((a,r)=>a+r.qty,0))}</td><td>กล่อง</td><td></td><td style="text-align:right;color:var(--ok);font-size:15px">${fmt(summaryTotal)}</td></tr>
+      </tbody></table></div>
     </div>`
     :'<div class="empty"><div class="ico">📊</div><div>ยังไม่มีการขายวันนี้</div></div>'}`;
 }
@@ -2498,13 +2501,16 @@ function exportSummaryExcel(dt) {
   const txList = transactions.filter(t=>t.date===dt);
   const summary={};
   txList.forEach(t=>t.items.forEach(i=>{
-    if(!summary[i.name]) summary[i.name]={name:i.name,qty:0};
+    if(!summary[i.name]) summary[i.name]={name:i.name,qty:0,revenue:0};
     summary[i.name].qty+=i.qty;
+    summary[i.name].revenue+=i.price*i.qty;
   }));
-  const s1=[['ชื่อสินค้า','จำนวนรวม','หน่วย']];
-  Object.values(summary).sort((a,b)=>b.qty-a.qty).forEach(r=>{
-    s1.push([r.name,r.qty,'กล่อง']);
+  const rows = Object.values(summary).sort((a,b)=>b.qty-a.qty);
+  const s1=[['ชื่อสินค้า','จำนวนรวม','หน่วย','ราคา/หน่วย','ยอดรวม']];
+  rows.forEach(r=>{
+    s1.push([r.name, r.qty, 'กล่อง', Math.round(r.revenue/r.qty), r.revenue]);
   });
+  s1.push(['รวมทั้งหมด', rows.reduce((a,r)=>a+r.qty,0), 'กล่อง', '', rows.reduce((a,r)=>a+r.revenue,0)]);
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s1),'สรุปสินค้า');
   XLSX.writeFile(wb,`สรุปสินค้า-${dt}.xlsx`);
